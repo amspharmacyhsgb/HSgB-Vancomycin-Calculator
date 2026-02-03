@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospital Sungai Buloh Vancomycin Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="assets/HSgB-ABX-SOS-Logo.png?v=3">
+  <link rel="shortcut icon" type="image/png" href="assets/HSgB-ABX-SOS-Logo.png?v=3">
+  <link rel="stylesheet" href="assets/style.css"> 
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-left" onclick="window.location.href='index.html'" style="cursor:pointer;">
+      <img src="assets/HSgB-ABX-SOS-Logo.png" alt="HSgB Icon" class="header-icon">
+      <div class="header-title-block">
+        <div class="header-title">Hospital Sungai Buloh Vancomycin Calculator</div>
+        <div class="header-subtitle">Quick Dosing Calculator for Hospital Sungai Buloh Staff</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="menu">
+        <button class="dropdown-toggle" onclick="toggleMenu(event)">â‹®</button>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <a href="vancomycin.html">Vancomycin Dose Calculator</a>
+          <a href="bw.html">Body Weight (BW) Calculator</a>
+          <a href="crcl.html">Renal Function (CrCl) Calculator</a>
+          <a href="tdm-sampling.html">Vancomycin TDM Sampling Guide</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="vancomycin" class="page active">
+      <div class="nav-buttons">
+        <button class="nav-button home" onclick="window.location.href='index.html'">HOME</button>
+        <button class="nav-button clear" onclick="clearVancomycinInputs()">CLEAR</button>
+      </div>
+
+      <div class="page-title-block">
+        <h1>Vancomycin Dose Calculator</h1>
+        <div class="input-note-style">
+          <strong>Input Patient Parameters.</strong> <br> Ensure all required patient data are entered accurately before proceeding. <br> All dose calculations are for adult patients only.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Patient Inputs</h3>
+        <form id="vancomycinForm">
+          <div class="form-group">
+            <label for="abw">Actual Body Weight (ABW) (kg):</label>
+            <input type="number" id="abw" step="0.1" placeholder="e.g., 70">
+            <div id="abwWarning" class="warning-card" style="display:none; margin-top: 10px; font-style: normal;">
+              <strong>âš ï¸ Weight entered is below the validated range for adult patients.</strong><br>
+              Please consult the Infectious Diseases (ID) or TDM Pharmacy team (Ext: 4124) for individualized dosing advice.
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="dialysisStatus">Dialysis Status:</label>
+            <select id="dialysisStatus">
+              <option value="">-- Please select --</option>
+              <option value="notHD">Not on Haemodialysis</option>
+              <option value="HD">ESRF on Haemodialysis (HD)</option>
+            </select>
+          </div>
+
+          <div id="crclGroup" class="form-group" style="display:none;">
+            <div class="form-group">
+                <label for="scr_input">Serum Creatinine (Âµmol/L):</label>
+                <input type="number" id="scr_input" step="1" placeholder="e.g., 85">
+            </div>
+            <label for="crcl">Creatinine Clearance (CrCl) (ml/min):</label>
+            <input type="number" id="crcl" step="0.1" placeholder="e.g., 45">
+            <p class="input-footnote">
+              Need help? <a href="crcl.html" target="_blank">ðŸ”— Renal Function (CrCl) Calculator</a>
+            </p>
+          </div>
+
+          <div id="timingGroup" class="form-group" style="display:none;">
+            <label for="dialysisTiming">Vancomycin-Dialysis Timing:</label>
+            <select id="dialysisTiming">
+              <option value="">-- Please select --</option>
+              <option value="beforeHD">Vancomycin started or planned to be given BEFORE dialysis</option>
+              <option value="duringHD">Vancomycin planned to be given DURING dialysis</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="indication">Indication of Vancomycin:</label>
+            <select id="indication">
+              <option value="">-- Please select --</option>
+              <option value="MRSA">MRSA Infection (Bacteraemia / Endocarditis / Pneumonia / Bone or Joint Infection / Neutropenic Fever)</option>
+              <option value="CNS">CNS Infection</option>
+              <option value="SSTI">Skin and Soft Tissue Infection (SSTI)</option>
+              <option value="UTI">Urinary Tract Infection (UTI)</option>
+              <option value="MRCONS">MRCONS Infection</option>
+              <option value="Enterococcus">Enterococcus faecium Infection</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="ivAccess">Type of IV Access Available:</label>
+            <select id="ivAccess">
+              <option value="">-- Please select --</option>
+              <option value="peripheral">Peripheral line</option>
+              <option value="central">Central line</option>
+            </select>
+            <p id="ivAccessFootnote" class="input-footnote" style="display:none;"></p>
+          </div>
+        </form>
+      </div>
+
+      <div id="vancomycinOutput" style="display:none;">
+
+        <h3>Summary of Inputs</h3>
+        <div id="summaryOutput" class="card"></div>
+<br>
+        <h3>STEP 1: Loading Dose (LD)</h3>
+        <div id="ldOutput" class="card"></div>
+        <div class="note-card">
+          ðŸ’¡ <strong>Notes:</strong>
+          <ul>
+            <li>Loading Dose â€“ To be given to ALL patients regardless of renal function.</li>
+            <li>Max Vancomycin dose: 2 g/DOSE.</li>
+            <li id="ldFootnoteHD" style="display:none;">If HD occurs on the same day as the loading dose, administer a TOP-UP DOSE post-HD.</li>
+          </ul>
+        </div>
+<br>
+        <h3>STEP 2: Maintenance Dose (MD) & Frequency</h3>
+        <div id="mdOutput" class="card"></div>
+        <div class="note-card">
+          ðŸ’¡ <strong>Notes:</strong>
+          <ul>
+            <li>Subsequent maintenance doses will be based on TDM level (Refer to Step 4 for TDM sampling).</li>
+            <li>While waiting for the TDM result, continue serving the Vancomycin unless the patient has severe AKI or poor urine output.</li>
+            <li>Max Vancomycin dose: 2 g/DOSE or 4 g/DAY.</li>
+            <li id="crcl60SpecialNote" style="display:none;">*May consider conservative dosing for patients at risk for Acute Kidney Injury (AKI) (e.g., elderly, concurrent nephrotoxic drugs) â€“ refer ID if in doubt.</li>
+          </ul>
+        </div>
+<br>
+        <h3>STEP 3: Administration (Dilution & Infusion Rate)</h3>
+        <div id="adminOutput" class="card">
+          
+          <h4>3.1 Loading Dose Dilution & Administration:</h4>
+          <div id="ldAdminOutput" class="output-box"></div>
+
+          <h4>3.2 Maintenance Dose Dilution & Administration:</h4>
+          <div id="mdAdminOutput" class="output-box"></div>
+
+          <div class="note-card">
+            ðŸ’¡ <strong>Maximum Infusion Rate:</strong>
+            <ul>
+              <li>Do not exceed 10 mg/min.</li>
+              <li>Infusing too rapidly may cause infusion-related reactions (Red Man Syndrome).</li>
+            </ul>
+          </div>
+
+          <a class="collapsible-header" onclick="toggleCollapsible('warningCollapse')">Step 3.3 â€“ Special Warnings & Adjustments</a>
+          <div id="warningCollapse" class="collapsible-content">
+            
+            <div class="card" style="background-color: var(--color-white); margin-bottom: 15px;">
+              <div class="warning-title">
+                <span class="icon">!</span> Vancomycin Infusion Reaction (VIR / â€œRed Man Syndromeâ€)
+              </div>
+              <ul>
+                <li>VIR is a common infusion-related reaction, not an allergy.</li>
+                <li>Symptoms: Itching, flushing, and erythematous rash involving the face, neck, or upper trunk.</li>
+                <li>Management:</li>
+                <ul style="margin-left: 20px;">
+                  <li>Stop or slow the infusion rate â€” symptoms usually resolve.</li>
+                  <li>Antihistamines (e.g., chlorpheniramine or diphenhydramine) may help if symptoms persist.</li>
+                  <li>For subsequent doses, infuse at &le; 10 mg/min to minimize recurrence.</li>
+                </ul>
+              </ul>
+            </div>
+
+            <div class="card" style="background-color: var(--color-white); margin-bottom: 15px;">
+              <div class="warning-title">
+                <span class="icon">!</span> Fluid Volume Considerations - High Dilution Volume Advisory
+              </div>
+              <p style="margin-top: 5px;">For patients with fluid restrictions or heart failure, consider alternative dilution strategy or slower infusion rate.</p>
+            </div>
+
+            <div class="card" style="background-color: var(--color-white); margin-bottom: 15px;">
+              <div class="warning-title">
+                <span class="icon">!</span> Phlebitis / Peripheral Line Irritation Risk
+              </div>
+              <p style="margin-top: 5px;">Peripheral administration of vancomycin may cause local irritation or phlebitis, particularly at higher concentrations. Use the largest available vein and monitor the site for redness, pain, or swelling</p>
+            </div>
+            
+          </div> </div> <br>
+        <h3>STEP 4: Therapeutic Drug Monitoring (TDM) Guidance</h3>
+<div id="tdmOutput" class="card">
+  <h4>4.1. When to Take the First TDM Sample</h4>
+  <div id="tdmTimingOutput" class="output-box"></div>
+
+  <h4 id="tdmSamplingHeading">4.2. Determine Sampling Method</h4>
+  <div id="tdmSamplingOutput" class="output-box"></div>
+
+  <div class="note-card">
+    ðŸ’¡ <strong>General Advisory:</strong>
+    <ul>
+      <li>If the sampling time falls after office hours (AOH), it is recommended to collect the sample the following morning on a working day.</li>
+<br>
+    <strong>Documentation Reminder:</strong>
+      <li>TDM results are meaningless unless:
+        <ol>
+          <li>The prescribed dose was correctly administered, and</li>
+          <li>The exact timing of infusion and sampling is accurately recorded.</li>
+        </ol>
+      </li>
+    </ul>
+    <p>Record all relevant details in the ðŸ“„ <a href="https://amshsgb.wixsite.com/my-site/_files/ugd/b064f1_41ed8df4c61f4c24a6bb2ebcff1cea7c.pdf" target="_blank">Vancomycin AUC Monitoring Form</a></p>
+  </div>
+</div>
+<br>
+        <h3>STEP 5: Patient / Laboratory Monitoring</h3>
+        <div class="card">
+          <ul>
+            <li>Monitor renal profile (RP) and urine output regularly.</li>
+            <li>Ensure the patient remains well hydrated while on Vancomycin.</li>
+            <li>Avoid concomitant nephrotoxic agents where possible.</li>
+            <li>Monitor WBC, CRP & Vital Signs for signs of improvement/deterioration.</li>
+          </ul>
+        </div>
+<br>
+        <h2 style="margin-top: 20px; color: var(--color-primary-dark);">Clinical Note Section (Auto-Generated)</h2>
+        <div class="input-note-style" style="margin-bottom: 20px;">
+Disclaimer! This note is intended as a template only - please review and adjust it based on your clinical assessment and professional judgement.
+        </div>
+
+        <div id="clinicalNoteContainer" class="card clinical-note-card">
+          <div id="clinicalNoteContent">
+            
+            <p style="font-weight: 700; color: #000000; margin-bottom: 10px; font-size: 14px; font-family: Arial, sans-serif;">
+                <strong>VANCOMYCIN THERAPY RECOMMENDATION</strong>
+            </p>
+            
+            <p style="margin-bottom: 15px; font-weight: 400; color: #000000;">
+                Received query from Dr <input type="text" id="dr_input" value="" placeholder="Name" style="border: none; border-bottom: 1px solid #000; width: 150px; padding: 2px 0; font-family: Arial, sans-serif; font-size: 13px;"> regarding IV Vancomycin initiation for this patient.
+            </p>
+            
+            <div class="card-title"><strong>Patient Summary (as provided by the primary care team)</div>
+            <ul id="noteSummaryList"></ul>
+
+            <hr style="margin: 5px 0;">
+
+            <div class="card-title"><strong>Recommended Regimen based on Hosp Sg Buloh Vancomycin Protocol</div>
+<p class="bold-highlight"><strong>Loading Dose:</strong> <span id="noteLDRegimen"></span></p>
+<p class="bold-highlight"><strong>Maintenance Dose:</strong> <span id="noteMDRegimen"></span></p>
+            <hr style="margin: 5px 0;">
+
+            <div class="card-title"><strong>Therapeutic Drug Monitoring (TDM)</div>
+            <p id="noteTDM1">TDM instructions not generated.</p>
+            <p id="noteTDM2"></p>
+
+            <ul>
+              <li><strong>TDM </strong>blood sample should be obtained via venipuncture whenever possible, from the arm opposite to the drug administration.</li>
+              <li>Do not collect TDM samples from central lines (e.g. PICC, CVC, or other central venous catheters).</li>
+</ul>
+            <hr style="margin: 5px 0;">
+
+            <div class="card-title"><strong>Remarks</div>
+            <ul>
+              <li>Monitor renal profile (RP) and urine output regularly.</li>
+              <li>Ensure the patient remains well hydrated while on Vancomycin.</li>
+              <li>Avoid concomitant nephrotoxic agents where possible.</li>
+              <li>Infusion rate must not exceed 10 mg/min to minimize infusion-related reactions.</li>
+            </ul>
+
+          </div>
+
+          <div class="copy-button-container">
+            <button class="copy-button" onclick="copyClinicalNote()">
+                ðŸ“‹ Copy to Notes
+                <span class="tooltip-text">Copy this note to your clinical documentation.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card note-card">
+          <h3>Vancomycin Calculator Disclaimer</h3>
+          <ul>
+            <li>Recommendation is based on Hospital Sungai Buloh Vancomycin Protocol.<br>ðŸ”— <a href="https://amshsgb.wixsite.com/my-site/_files/ugd/b064f1_9106727a6d0748b2a4a9d448af16208a.pdf" target="_blank">Refer to Hosp Sungai Buloh Vancomycin Protocol</a></li>
+<br>
+            <li><strong>APPLICATION OF THIS PROTOCOL:</strong> Applicable to intravenous Vancomycin for the treatment of selective gram-positive organisms including but not limited to:
+              <ol>
+                <li>Methicillin-resistant Staphylococci (e.g. MRSA / MRCONS)</li>
+                <li>Enterococci (e.g. Enterococcus faecium)</li>
+                <li>Rhodococci (e.g. Rhodococcus hoagii)</li>
+              </ol>
+            </li>
+<br>
+            <li><strong>This protocol is NOT applicable to the treatment of Clostridioides difficile infection (CDI) using oral Vancomycin.</strong></li>
+            <li>If in any doubt, call TDM Pharmacy (Ext: 4124) or refer to Infectious Disease (ID).</li>
+            <li>Referral to ID or AMS Team is strongly recommended for all MRSA or Vancomycin cases.</li>
+          </ul>
+        </div> 
+      </div>  
+      </div> </div> </div> <footer class="footer">
+    <div class="footer-title">Disclaimer</div>
+    <ul>
+      <li><strong>Prepared by:</strong> Izyana Munirah Idham (AMS Pharmacist, HSgB)</li>
+      <li><strong>In collaboration with:</strong></li>
+      <li style="margin-left: 20px;">1. Nur Farhana (TDM Pharmacy)</li>
+      <li style="margin-left: 20px;">2. Hannah Md Mahir, Fong Siew Li & Muhammad Zulhafiz (AMS Pharmacists)</li>
+      <li style="margin-left: 20px;">3. PRIC & Medication Safety Team</li>
+      <li><strong>Approved by:</strong> Dr Syamhanin Adnan (Head of Pharmacy Dept, HSgB)</li>
+      <li><strong>Launched:</strong> February 2026</li>
+      <li class="footer-critical-note"><strong>For Hospital Sungai Buloh Staff Use Only.</strong></li>
+      <li><strong>Footnote:</strong> Developed for Hospital Sungai Buloh staff use only – for educational and clinical support purposes. 
+        This calculator may not cover all aspects of clinical practice; healthcare practitioners are encouraged to review 
+        patient details and professionally assess the relevance of this guide to each clinical situation. 
+        This guide is subject to periodic updates. We assume no responsibility for any party that referred to an outdated version.
+      </li>
+      <li>📝 <strong>Feedback:</strong> We welcome your feedback to improve this tool. <a href="https://forms.gle/nDNDfC2ktjmumdSYA" target="_blank">Click here to submit feedback</a></li>
+    </ul>
+  </footer>
+
+<script src="assets/script.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', (e) => e.preventDefault());
+    });
+    
+    const calculatorInputs = document.querySelectorAll('#vancomycin input, #vancomycin select');
+    
+    calculatorInputs.forEach(element => {
+      // 1. Always attach main calculation listener
+      element.addEventListener('input', calculateVancomycin);
+      element.addEventListener('change', calculateVancomycin);
+      
+      // 2. Attach specific conditional logic handlers for required dropdowns
+      if (element.id === 'dialysisStatus') {
+          // This must run when the dialysis status changes to show/hide CrCl inputs
+          element.addEventListener('change', toggleCrClInput);
+      }
+      if (element.id === 'ivAccess') {
+          // This must run when the IV access changes to update the footnote
+          element.addEventListener('change', displayIvAccessFootnote);
+      }
+    });
+  });
+</script>
+</body>
+
+</html>
+
+

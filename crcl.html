@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospital Sungai Buloh Renal Function Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="assets/HSgB-ABX-SOS-Logo.png?v=3">
+  <link rel="shortcut icon" type="image/png" href="assets/HSgB-ABX-SOS-Logo.png?v=3">
+  <link rel="stylesheet" href="assets/style.css"> 
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-left" onclick="window.location.href='index.html'" style="cursor:pointer;">
+      <img src="assets/HSgB-ABX-SOS-Logo.png" alt="HSgB Icon" class="header-icon">
+      <div class="header-title-block">
+        <div class="header-title">Hospital Sungai Buloh Vancomycin Calculator</div>
+        <div class="header-subtitle">Quick Dosing Calculator for Hospital Sungai Buloh Staff</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="menu">
+        <button class="dropdown-toggle" onclick="toggleMenu(event)">â‹®</button>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <a href="vancomycin.html">Vancomycin Dose Calculator</a>
+          <a href="bw.html">Body Weight (BW) Calculator</a>
+          <a href="crcl.html">Renal Function (CrCl) Calculator</a>
+          <a href="tdm-sampling.html">Vancomycin TDM Sampling Guide</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="crcl" class="page active">
+      <div class="nav-buttons">
+        <button class="nav-button home" onclick="window.location.href='index.html'">HOME</button>
+        <button class="nav-button clear" onclick="clearCrClInputs()">CLEAR</button>
+      </div>
+
+      <div class="page-title-block">
+        <h1>Renal Function (CrCl) Calculator</h1>
+        <p>Cockcroftâ€“Gault-based creatinine clearance.</p>
+      </div>
+
+      <div class="card">
+        <h3>Input Parameters</h3>
+        <form id="crclForm">
+          <div class="form-group">
+            <label for="crcl_age">Age (years old):</label>
+            <input type="number" id="crcl_age" step="1" placeholder="e.g., 65">
+          </div>
+
+          <div class="form-group">
+            <label for="crcl_bw">Body Weight (kg):</label>
+            <input type="number" id="crcl_bw" step="0.1" placeholder="e.g., 70">
+            <div class="note-card">
+              *For <strong>OBESE</strong> patients (BMI > 30 kg/mÂ²), use <strong>Adjusted Body Weight (AdjBW)</strong>.
+              <a href="bw.html" target="_blank">ðŸ”— Body Weight (BW) Calculator</a>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="crcl_scr">Serum Creatinine (SCr) (Âµmol/L):</label>
+            <input type="number" id="crcl_scr" step="1" placeholder="e.g., 85">
+          </div>
+
+          <div class="form-group">
+            <label for="crcl_gender">Gender:</label>
+            <select id="crcl_gender">
+              <option value="">-- Please select --</option>
+              <option value="male">Male (F = 1.23)</option>
+              <option value="female">Female (F = 1.04)</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <h3>Calculation Result</h3>
+      <div id="crclOutput" style="display:none;">
+        <div class="calc-result-box">
+          <strong>Creatinine Clearance (CrCl):</strong>
+          <span id="result_crcl"></span> mL/min
+        </div>
+        <p class="input-footnote" style="margin-top: 10px;">
+          Derived from the Cockcroftâ€“Gault equation.
+        </p>
+      </div>
+
+<div class="note-card">
+  <div class="card-title" style="color: var(--color-primary-dark); font-style: normal;">
+    Formula Used (Cockcroftâ€“Gault)
+  </div>
+  <p>
+    <strong>CrCl (mL/min) = </strong> ((140 âˆ’ Age) Ã— Body Weight (kg) Ã— F) / SCr (Âµmol/L)<br>
+    Where F = 1.23 for Male and 1.04 for Female.
+  </p>
+</div>
+    </div> </div> <footer class="footer">
+    <div class="footer-title">Disclaimer</div>
+    <ul>
+      <li><strong>Prepared by:</strong> Izyana Munirah Idham (AMS Pharmacist, HSgB)</li>
+      <li><strong>In collaboration with:</strong></li>
+      <li style="margin-left: 20px;">1. Nur Farhana (TDM Pharmacy)</li>
+      <li style="margin-left: 20px;">2. Hannah Md Mahir, Fong Siew Li & Muhammad Zulhafiz (AMS Pharmacists)</li>
+      <li style="margin-left: 20px;">3. PRIC & Medication Safety Team</li>
+      <li><strong>Approved by:</strong> Dr Syamhanin Adnan (Head of Pharmacy Dept, HSgB)</li>
+      <li><strong>Launched:</strong> February 2026</li>
+      <li class="footer-critical-note"><strong>For Hospital Sungai Buloh Staff Use Only.</strong></li>
+      <li><strong>Footnote:</strong> Developed for Hospital Sungai Buloh staff use only – for educational and clinical support purposes. 
+        This calculator may not cover all aspects of clinical practice; healthcare practitioners are encouraged to review 
+        patient details and professionally assess the relevance of this guide to each clinical situation. 
+        This guide is subject to periodic updates. We assume no responsibility for any party that referred to an outdated version.
+      </li>
+      <li>📝 <strong>Feedback:</strong> We welcome your feedback to improve this tool. <a href="https://forms.gle/nDNDfC2ktjmumdSYA" target="_blank">Click here to submit feedback</a></li>
+    </ul>
+  </footer>
+
+<script src="assets/script.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', (e) => e.preventDefault());
+    });
+    
+    // ULTRA-ROBUST SELECTION: Target all inputs/selects inside the page wrapper
+    const calculatorInputs = document.querySelectorAll('#crcl input, #crcl select');
+    
+    calculatorInputs.forEach(element => {
+      element.addEventListener('input', calculateCrCl);
+      element.addEventListener('change', calculateCrCl);
+    });
+  });
+</script>
+</body>
+
+</html>

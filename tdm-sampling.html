@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospital Sungai Buloh Vancomycin TDM Sampling Guide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="assets/HSgB-ABX-SOS-Logo.png?v=3">
+  <link rel="shortcut icon" type="image/png" href="assets/HSgB-ABX-SOS-Logo.png?v=3">
+  <link rel="stylesheet" href="assets/style.css"> 
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-left" onclick="window.location.href='index.html'" style="cursor:pointer;">
+      <img src="assets/HSgB-ABX-SOS-Logo.png" alt="HSgB Icon" class="header-icon">
+      <div class="header-title-block">
+        <div class="header-title">Hospital Sungai Buloh Vancomycin Calculator</div>
+        <div class="header-subtitle">Quick Dosing Calculator for Hospital Sungai Buloh Staff</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="menu">
+        <button class="dropdown-toggle" onclick="toggleMenu(event)">⋮</button>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <a href="vancomycin.html">Vancomycin Dose Calculator</a>
+          <a href="bw.html">Body Weight (BW) Calculator</a>
+          <a href="crcl.html">Renal Function (CrCl) Calculator</a>
+          <a href="tdm-sampling.html">Vancomycin TDM Sampling Guide</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="tdm-sampling" class="page active">
+      <div class="nav-buttons">
+        <button class="nav-button home" onclick="window.location.href='index.html'">HOME</button>
+        <button class="nav-button clear" onclick="clearTDMSamplingInputs()">CLEAR</button>
+      </div>
+
+      <div class="page-title-block">
+        <h1>Vancomycin TDM Sampling Guide</h1>
+        <p>Calculate optimal timing for TDM sample collection.</p>
+      </div>
+
+      <div class="warning-card" style="margin-bottom: 20px; background: linear-gradient(to bottom, #FFFBEA, #FFF8E7);">
+        <strong>⚠️ Important Disclaimer:</strong><br>
+        This calculator and its recommendations are <strong>not applicable</strong> to patients on renal replacement therapy (RRT) or haemodialysis.
+      </div>
+
+      <div class="card">
+        <h3>Input Parameters</h3>
+        <form id="tdmSamplingForm">
+          
+          <div class="form-group">
+            <label>Sampling Method:</label>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+              <button type="button" class="sampling-method-button" id="troughButton" onclick="selectSamplingMethod('trough')">
+                Trough Sampling
+              </button>
+              <button type="button" class="sampling-method-button" id="aucButton" onclick="selectSamplingMethod('auc')">
+                AUC Sampling
+              </button>
+            </div>
+            <input type="hidden" id="samplingMethod" value="">
+          </div>
+
+          <div class="form-group">
+            <label for="loadingDoseDateTime">Loading Dose - Date & Time (Optional):</label>
+            <input type="datetime-local" id="loadingDoseDateTime">
+            <p class="input-footnote">Loading dose information is not required for TDM sampling calculations.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="firstMaintenanceDoseDateTime">First Maintenance Dose - Date & Time:</label>
+            <input type="datetime-local" id="firstMaintenanceDoseDateTime">
+          </div>
+
+          <div class="form-group">
+            <label for="dose">Vancomycin Dose:</label>
+            <select id="dose">
+              <option value="">-- Please select --</option>
+              <option value="500">500 mg</option>
+              <option value="750">750 mg</option>
+              <option value="1000">1000 mg</option>
+              <option value="1250">1250 mg</option>
+              <option value="1500">1500 mg</option>
+              <option value="1750">1750 mg</option>
+              <option value="2000">2000 mg</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="frequency">Frequency:</label>
+            <select id="frequency">
+              <option value="">-- Please select --</option>
+              <option value="EOD">EOD (Every Other Day)</option>
+              <option value="OD">OD (Once Daily)</option>
+              <option value="BD">BD (Twice Daily)</option>
+              <option value="TDS">TDS (Three Times Daily)</option>
+              <option value="QID">QID (Four Times Daily)</option>
+            </select>
+            <p id="frequencyFootnote" class="input-footnote" style="display:none; margin-top: 10px;"></p>
+          </div>
+        </form>
+      </div>
+
+      <div id="tdmSamplingOutput" style="display:none;">
+        <h3>TDM Sampling Recommendations</h3>
+
+        <h4>Summary of Inputs</h4>
+        <div id="summaryOutput" class="card"></div>
+
+        <h4>Trough Sampling Recommendation</h4>
+        <div id="troughOutput" class="output-box"></div>
+
+        <div id="postDoseSection" style="display:none;">
+          <h4>Post-Dose (Peak) Sampling Recommendation</h4>
+          <div id="postDoseOutput" class="output-box"></div>
+        </div>
+
+        <div id="afterHoursNote" class="note-card" style="display:none; background-color: #FFE5E5; border: 3px solid #C62828; padding: 12px 15px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(198, 40, 40, 0.3);">
+          <!-- Content will be dynamically populated by JavaScript -->
+        </div>
+
+        <div id="weekendNote" class="note-card" style="display:none; background-color: #FFE5E5; border: 3px solid #C62828; padding: 12px 15px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(198, 40, 40, 0.3);">
+          <!-- Content will be dynamically populated by JavaScript -->
+        </div>
+
+        <h3 style="margin-top: 30px;">Clinical Note Template</h3>
+        <div class="input-note-style" style="margin-bottom: 20px;">
+          Disclaimer! This note is intended as a template only - please review and adjust it based on your clinical assessment and professional judgement.
+        </div>
+
+        <div id="clinicalNoteContainer" class="card clinical-note-card">
+          <div id="clinicalNoteTDMContent">
+            
+            <p style="font-weight: 700; color: #000000; margin-bottom: 10px; font-size: 14px; font-family: Arial, sans-serif;">
+                <strong>VANCOMYCIN TDM SAMPLING PLAN</strong>
+            </p>
+            
+            <div class="card-title"><strong>PATIENT SUMMARY</strong></div>
+            <ul id="noteTDMSummaryList"></ul>
+
+            <hr style="margin: 5px 0;">
+
+            <div class="card-title"><strong>TDM SAMPLING INSTRUCTIONS</strong></div>
+            <p id="noteTDMTroughSampling"></p>
+            <p id="noteTDMPostDoseSampling"></p>
+
+            <hr style="margin: 5px 0;">
+
+            <div class="card-title"><strong>REMINDERS</strong></div>
+            <ul>
+              <li>TDM blood samples should be obtained via venipuncture whenever possible, from the arm opposite to the drug administration.</li>
+              <li>Do not collect TDM samples from central lines (e.g., PICC, CVC, or other central venous catheters).</li>
+              <li>Ensure accurate documentation of dosing and sampling times in the Vancomycin AUC Monitoring Form.</li>
+            </ul>
+
+          </div>
+
+          <div class="copy-button-container">
+            <button class="copy-button" onclick="copyClinicalNoteTDM()">
+                📋 Copy to Notes
+                <span class="tooltip-text">Copy this TDM sampling guide to your clinical documentation.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="note-card">
+          <strong>💡 General Reminders:</strong>
+          <ul>
+            <li>TDM blood samples should be obtained via venipuncture whenever possible, from the arm opposite to the drug administration.</li>
+            <li>Do not collect TDM samples from central lines (e.g., PICC, CVC, or other central venous catheters).</li>
+            <li>Ensure accurate documentation of dosing and sampling times.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-title">Disclaimer</div>
+    <ul>
+      <li><strong>Prepared by:</strong> Izyana Munirah Idham (AMS Pharmacist, HSgB)</li>
+      <li><strong>In collaboration with:</strong></li>
+      <li style="margin-left: 20px;">1. Nur Farhana (TDM Pharmacy)</li>
+      <li style="margin-left: 20px;">2. Hannah Md Mahir, Fong Siew Li & Muhammad Zulhafiz (AMS Pharmacists)</li>
+      <li style="margin-left: 20px;">3. PRIC & Medication Safety Team</li>
+      <li><strong>Approved by:</strong> Dr Syamhanin Adnan (Head of Pharmacy Dept, HSgB)</li>
+      <li><strong>Launched:</strong> February 2026</li>
+      <li class="footer-critical-note"><strong>For Hospital Sungai Buloh Staff Use Only.</strong></li>
+      <li><strong>Footnote:</strong> Developed for Hospital Sungai Buloh staff use only – for educational and clinical support purposes. 
+        This calculator may not cover all aspects of clinical practice; healthcare practitioners are encouraged to review 
+        patient details and professionally assess the relevance of this guide to each clinical situation. 
+        This guide is subject to periodic updates. We assume no responsibility for any party that referred to an outdated version.
+      </li>
+      <li>📝 <strong>Feedback:</strong> We welcome your feedback to improve this tool. <a href="https://forms.gle/nDNDfC2ktjmumdSYA" target="_blank">Click here to submit feedback</a></li>
+    </ul>
+  </footer>
+
+<script src="assets/script.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', (e) => e.preventDefault());
+    });
+    
+    const calculatorInputs = document.querySelectorAll('#tdm-sampling input, #tdm-sampling select');
+    
+    calculatorInputs.forEach(element => {
+      element.addEventListener('input', calculateTDMSampling);
+      element.addEventListener('change', calculateTDMSampling);
+    });
+
+    // Frequency change handler
+    document.getElementById('frequency').addEventListener('change', displayFrequencyFootnote);
+  });
+</script>
+</body>
+
+</html>
