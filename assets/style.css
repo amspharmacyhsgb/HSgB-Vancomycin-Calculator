@@ -1,0 +1,807 @@
+/* --- General Design System --- */
+:root {
+  --color-primary: #800000; /* Dark Maroon - primary, headers, accents */
+  --color-primary-dark: #510400; /* Darker Maroon for contrast/buttons */
+  --color-cream: #FFF8E7; /* Light Cream */
+  --color-white: #FFFFFF;
+  --color-light-grey: #E8E8E8; /* Light Grey Ã¢â‚¬â€œ footnotes, formula, disclaimers */
+  --color-secondary-light: #924444; /* Light Maroon - Vanco section titles */
+  --color-vanco-card: #f5f5f5; /* Lighter grey for inner cards */
+  --color-red-placeholder: #C62828; /* Red for TDM placeholders */
+  --font-main: 'Poppins', sans-serif;
+  --shadow-soft: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--color-white);
+  color: #333;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* --- Global Components: Sticky Header --- */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  padding: 20px 20px;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-title-block {
+  margin-left: 10px;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.header-subtitle {
+  font-size: 0.75rem;
+  font-weight: 300;
+  opacity: 0.8;
+}
+
+.header-icon {
+  width: 50px; /* Adjust this size as needed for your logo */
+  height: 50px;
+  margin-right: 5px; /* Add some space between the logo and the title */
+  object-fit: contain; /* Ensures the image scales properly without distortion */
+}
+
+/* Dropdown/Hamburger Menu */
+.menu {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-toggle {
+  background: none;
+  border: none;
+  color: var(--color-white);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--color-white);
+  min-width: 200px;
+  box-shadow: var(--shadow-soft);
+  z-index: 100;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.dropdown-menu a {
+  color: #333;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 0.9rem;
+}
+
+.dropdown-menu a:hover {
+  background-color: var(--color-light-grey);
+  text-decoration: none;
+}
+
+/* --- Global Components: Navigation Buttons (HOME/CLEAR) --- */
+.nav-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 15px 20px 0;
+}
+
+.nav-button {
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  border: none;
+}
+
+.nav-button.home {
+  background-color: var(--color-secondary-light);
+  color: var(--color-white);
+}
+
+.nav-button.home:hover {
+  background-color: var(--color-primary);
+}
+
+.nav-button.clear {
+  background-color: var(--color-light-grey);
+  color: #333;
+}
+
+.nav-button.clear:hover {
+  background-color: #cacaca;
+}
+
+/* --- Page 1: Calculator Selection Cards --- */
+.calc-selection-card {
+  width: 90%;
+  margin: 20px auto;
+  background: var(--color-cream);
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 30px 30px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s; background 0.2s;
+  box-sizing: border-box;
+  border: 1px solid #c0c0c0;
+  border-left: 8px solid var(--color-primary);
+  overflow: hidden;
+  min-height: 140px; /* Ensure consistent height */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.calc-selection-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  background: #F2E1D2;
+}
+
+.card-title {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  font-size: 1.35rem;
+}
+
+.card-subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin-top: 5px;
+}
+
+/* --- Calculator Page General Styles --- */
+.card {
+  background-color: var(--color-vanco-card);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Softer shadow for inner cards */
+  border: 1px solid var(--color-light-grey);
+}
+
+.page-title-block {
+  text-align: left;
+  padding: 10px 20px 20px;
+}
+
+.page-title-block h1 {
+  color: var(--color-primary-dark);
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.page-title-block p {
+  font-size: 1rem;
+  color: #666;
+  margin-top: 5px;
+}
+
+h3 {
+    color: var(--color-secondary-light);
+    font-weight: 600;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    font-size: 1.25rem;
+    border-left: 4px solid var(--color-primary);
+    padding-left: 12px;
+    border-bottom: 1px solid var(--color-light-grey);
+    padding-bottom: 5px;
+}
+
+/* --- Input Fields and Forms --- */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #000000;
+}
+
+.form-group input[type="number"],
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  background-color: var(--color-white);
+}
+
+.input-footnote {
+  font-size: 0.85rem;
+  color: #777;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+.note-card {
+    background-color: var(--color-light-grey);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    font-size: 0.85rem;
+    font-style: italic;
+    border: 1px solid #c8c8c8;
+}
+
+/* Warning card style with yellow/orange left border */
+.warning-card {
+    background-color: #FFF9E6;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    font-size: 0.9rem;
+    border: 1px solid #FFD700;
+    border-left: 4px solid #FFA500;
+    padding-left: 18px;
+}
+
+/* Style to indent the list inside all light-grey note cards */
+.note-card ul {
+    /* Adds left margin to indent the entire list */
+    margin-left: 15px;
+    /* Ensures standard bullet points (disc) are used */
+    list-style: disc; 
+    /* Reset padding if a global rule removed it */
+    padding-left: 0;
+    margin-top: 5px; /* Add slight separation from the main text/heading */
+}
+
+.input-note-style {
+    background-color: var(--color-cream); /* Light Cream background */
+    border: 1px solid var(--color-primary); /* Use a subtle Dark Maroon border for definition */
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-size: 0.9rem; /* Smaller font */
+    color: #000000; /* Black text */
+    font-weight: 400; /* Normal weight */
+}
+
+/* Style for the list inside the Summary of Inputs card */
+#summaryOutput ul {
+    /* Remove default browser padding/margin */
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    /* Add left margin to indent the entire list */
+    margin-left: 15px; 
+}
+
+#summaryOutput ul li {
+    /* Convert list items to be explicitly list items again 
+       (in case a previous global rule overwrote it) */
+    list-style: disc; 
+    margin-bottom: 5px;
+    padding-left: 5px; /* Slight extra padding for a cleaner look */
+}    
+
+/* --- Output Styles --- */
+.output-box {
+    background-color: var(--color-cream);
+    border: 2px solid var(--color-primary-dark);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.output-box strong {
+    font-size: 1.1em;
+    color: var(--color-primary-dark);
+    display: block;
+}
+
+.calc-result-box {
+  border: 2px solid var(--color-primary-dark);
+  background-color: var(--color-cream);
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 8px;
+}
+
+/* --- Calculator Result Styling --- */
+
+/* 1. Style for the Label (Creatinine Clearance (CrCl):) */
+.calc-result-box strong {
+  font-size: 1.0rem; /* Slightly reduced label size */
+  color: var(--color-primary-dark);
+  display: block; 
+  margin-bottom: 5px;
+}
+
+/* 2. Style for the Value (66.9) and Unit (mL/min) */
+.calc-result-box span {
+    font-size: 1.7rem; /* User's desired size */
+    font-weight: 800;
+    color: var(--color-primary-dark);
+    display: inline; /* CRITICAL FIX: Ensures the unit stays on the same line */
+    line-height: 1.2; /* Adjusted line height for visibility */
+}
+
+/* Add this new rule to assets/style.css */
+/* Style for units (kg/m2, m2, kg) sitting next to the large span */
+.calc-result-box {
+    /* Set color for any text flowing directly inside the container (the unit) */
+    color: #666; 
+    font-weight: normal; 
+    font-size: 1rem;
+}
+
+.dose-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 0.95rem;
+    background-color: var(--color-cream);
+}
+
+/* Fix: Remove background from the general selector */
+.dose-table th, .dose-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+    /* Remove the background-color and color properties here */
+}
+
+/* 1. Set Header (TH) to Maroon and White text */
+.dose-table th {
+    background-color: var(--color-secondary-light); /* Maroon */
+    color: var(--color-white);
+}
+
+/* 2. Set Body Cells (TD) to Light Cream and dark text */
+.dose-table td {
+    background-color: var(--color-cream); /* Light Cream */
+    color: #333; /* Ensure dark text for readability on light background */
+}
+
+/* 3. Keep specific styling for the Dose Column text (it uses the dark maroon color) */
+.dose-table td.dose-col {
+    font-weight: 700;
+    color: var(--color-primary-dark);
+}
+
+/* Style to indent the list inside the Step 5 monitoring card */
+#vancomycinOutput .card ul {
+    /* This rule targets all <ul> inside a generic card within the output section.
+       It should not conflict with previous specific rules for .note-card or #summaryOutput */
+    list-style: disc;
+    margin-left: 15px;
+    padding-left: 0;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+/* --- Collapsible Section (Step 3.3) --- */
+.collapsible-header {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 5px;
+  font-weight: 600;
+  display: block;
+  transition: background-color 0.2s;
+}
+
+.collapsible-header:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.collapsible-content {
+    padding: 15px;
+    background-color: var(--color-vanco-card);
+    border-radius: 5px;
+    border: 1px solid var(--color-light-grey);
+    display: none;
+    overflow: hidden;
+}
+
+/* Style for the titles inside the Step 3.3 warning cards */
+.warning-title {
+    font-weight: 600;
+    color: var(--color-primary-dark);
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    display: flex; /* Allows icon and text to align */
+    align-items: center;
+}
+
+.warning-title .icon {
+    color: var(--color-red-placeholder); /* Red color for the exclamation mark */
+    font-size: 1.2em;
+    margin-right: 8px;
+}
+
+/* New style to make the text smaller inside the collapsible warning section */
+#warningCollapse p, 
+#warningCollapse ul li {
+    font-size: 0.9rem; /* Set font size to 90% of the default */
+}
+
+/* Important: Reset the font size for the list bullets in the warning section 
+   if they rely on the parent font size (ensuring they remain proportional) */
+#warningCollapse ul {
+    margin-left: 15px; /* Keeps the indentation consistent */
+}
+
+/* --- Clinical Note Section --- */
+.clinical-note-card {
+    margin-top: 20px;
+    border: 1px solid var(--color-secondary-light);
+    background-color: var(--color-white);
+    padding: 20px;
+}
+
+.clinical-note-card .card-title {
+    color: var(--color-primary);
+    font-weight: 600;
+    font-style: italic;
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.clinical-note-card .bold-highlight {
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    display: block;
+    margin-bottom: 5px;
+}
+
+.clinical-note-card input[type="text"] {
+    border: none;
+    border-bottom: 2px dotted var(--color-red-placeholder);
+    font-weight: 600;
+    color: var(--color-red-placeholder);
+    width: 180px;
+    font-family: var(--font-main);
+    padding: 2px 0;
+    background-color: transparent;
+}
+
+.copy-button {
+  background-color: var(--color-primary-dark);
+  color: var(--color-white);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  display: block;
+  width: 100%;
+  margin-top: 15px;
+  position: relative; /* For tooltip */
+}
+
+.copy-button:hover {
+  background-color: var(--color-secondary-light);
+}
+
+.copy-button .tooltip-text {
+    visibility: hidden;
+    background-color: #555;
+    color: var(--color-white);
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 10px;
+    position: absolute;
+    z-index: 1;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    width: 250px;
+    font-size: 0.8rem;
+}
+
+.copy-button:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* --- Clinical Note Font Override (Calibri/Arial, Size 10) --- */
+#clinicalNoteContainer, 
+#clinicalNoteContainer h2, 
+#clinicalNoteContainer p, 
+#clinicalNoteContainer li {
+    /* Calibri equivalent font stack (Arial is a good web fallback) */
+    font-family: Arial, Helvetica, sans-serif; 
+    
+    /* Font size 10pt is approximately 0.83rem or 13.33px. 
+       Using 13px (closest standard equivalent) */
+    font-size: 13px;
+    
+    /* Ensure normal weight for the body text */
+    font-weight: 400; 
+}
+
+/* Override the size of titles/headers within the clinical note to match the body text */
+#clinicalNoteContainer .card-title {
+    font-size: 13px !important; 
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Ensure the bold-highlighted text remains bold but at the new size */
+#clinicalNoteContainer .bold-highlight {
+    font-weight: 700;
+    font-size: 13px;
+}
+
+/* --- FINAL FIX: ENSURE ALL CLINICAL NOTE CONTENT IS CONSISTENT --- */
+#clinicalNoteContainer p,
+#clinicalNoteContainer li,
+#clinicalNoteContainer .card-title,
+#clinicalNoteContainer .bold-highlight {
+    /* Enforce the desired font stack and size for all content and headers */
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 13px !important;
+    line-height: 1.4;
+    color: #000000 !important;
+    /* Reset italic and normal weight for general paragraphs */
+    font-style: normal !important;
+    font-weight: 400 !important;
+}
+
+/* Re-apply bolding only to the specific <strong> tags */
+#clinicalNoteContainer strong {
+    font-weight: 700 !important;
+}
+
+/* Centers the title inside the specific Disclaimer card */
+.card.note-card h3 {
+    font-size: 1rem; 
+    font-weight: 600;
+    text-align: left;
+}
+
+/* Style to make the body content smaller inside the Disclaimer Card */
+.card.note-card ul li,
+.card.note-card p {
+    font-size: 0.8rem; /* Set font size slightly smaller than the current 0.85rem */
+    line-height: 1.4;
+}
+
+/* --- Footer --- */
+.footer {
+  background-color: var(--color-light-grey);
+  border-top: 1px solid #ccc;
+  padding: 15px 20px 25px;
+  font-size: 0.85rem;
+  color: #555;
+  text-align: left;
+  margin-top: 40px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.footer ul {
+    list-style: disc;
+    padding: 0;
+    margin: 5px 0 10px 20px;
+}
+
+.footer-title {
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 5px;
+}
+
+.footer li {
+    color: #333; 
+    display: list-item;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+    line-height: 1.4;
+    /* CRITICAL FIX: Ensure the base text is NOT bold */
+    font-weight: normal; 
+}
+
+.footer-critical-note {
+    font-weight: 700;
+    color: #000000;
+}
+
+.footer li strong {
+    /* Reinforce bolding only for the labels wrapped in <strong> */
+    font-weight: 700;
+    color: #000000;
+}
+
+/* --- TDM Sampling Guide Specific Styles --- */
+
+/* Disclaimer Box with Gradient */
+.tdm-disclaimer {
+  background: linear-gradient(to bottom, #FFF9E6, #FFF8E7);
+  border: 1px solid #FFD54F;
+  border-left: 4px solid #FFA726;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Toggle Button Styling */
+.toggle-buttons {
+  display: flex;
+  gap: 0;
+  background-color: var(--color-light-grey);
+  border-radius: 8px;
+  padding: 4px;
+  width: fit-content;
+  margin-top: 10px;
+}
+
+.toggle-buttons input[type="radio"] {
+  display: none;
+}
+
+.toggle-button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 0.95rem;
+  background-color: transparent;
+  color: #333;
+  border: none;
+  white-space: nowrap;
+}
+
+.toggle-buttons input[type="radio"]:checked + .toggle-button {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-button:hover {
+  background-color: rgba(128, 0, 0, 0.1);
+}
+
+.toggle-buttons input[type="radio"]:checked + .toggle-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* --- Mobile Responsive Adjustments --- */
+@media screen and (max-width: 768px) {
+  .calc-selection-card {
+    padding: 15px 20px; /* Reduced from 30px 30px */
+    margin: 12px auto; /* Reduced from 20px auto */
+    min-height: 120px; /* Slightly shorter for mobile but still consistent */
+  }
+  
+  .card-title {
+    font-size: 1.1rem; /* Reduced from 1.35rem */
+    line-height: 1.2;
+  }
+  
+  .card-subtitle {
+    font-size: 0.85rem; /* Reduced from 1rem */
+    margin-top: 3px; /* Reduced from 5px */
+  }
+  
+  .page-title-block {
+    padding: 5px 20px 15px; /* Reduced vertical padding */
+  }
+  
+  .page-title-block h1 {
+    font-size: 1.4rem; /* Reduced from 1.75rem */
+  }
+  
+  .toggle-buttons {
+    width: 100%;
+  }
+  
+  .toggle-button {
+    flex: 1;
+    text-align: center;
+    padding: 10px 15px;
+    font-size: 0.85rem;
+  }
+}
+
+/* --- Output and Content Hierarchy Styling --- */
+
+/* 1. PRIMARY OUTPUT CONTENT (Summary of Inputs List, Dose/Frequency text) */
+/* Sets the main list/paragraph text inside the calculator steps to normal size (1rem) */
+#vancomycinOutput p,
+#vancomycinOutput li {
+    font-size: 1rem; 
+    font-weight: 400;
+}
+
+/* 2. SUPPORTING TEXT (Notes, Footnotes, Disclaimer) */
+/* Use increased specificity to ensure these elements are smaller than 1rem */
+.note-card p,
+.note-card ul li,
+.input-footnote {
+    font-size: 0.85rem !important; /* Force smaller size for reminder notes/footnotes */
+    font-weight: 400;
+}
+
+/* 3. Ensure Disclaimer content is correctly set to the smallest size */
+.card.note-card ul li,
+.card.note-card p {
+    font-size: 0.8rem !important; /* Smallest size for the disclaimer content */
+    line-height: 1.4;
+}
+
+/* 4. Restore Heading Sizes (Ensuring they are not affected by p/li reductions) */
+#vancomycinOutput h3 {
+    font-size: 1.25rem; /* Restores standard H3 size */
+}
+#vancomycinOutput h4 {
+    font-size: 1.1rem; /* Restores standard H4 size */
+
+}
+
+
+
+
+
+
+
+
+
+
