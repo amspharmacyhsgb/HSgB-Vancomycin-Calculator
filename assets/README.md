@@ -28,8 +28,9 @@ Please **do not replicate, distribute, or host** this calculator outside of Hosp
 
 | Version | Date | Description |
 |----------|------|-------------|
-| 1.0 | Nov 2025 | Initial release (HTML version) |
+| 1.0 | Mar 2026 | Initial release (HTML version) |
 
 ---
+
 
 
