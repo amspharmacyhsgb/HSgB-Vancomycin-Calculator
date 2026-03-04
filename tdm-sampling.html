@@ -63,11 +63,11 @@
               <p style="margin: 0 0 10px 0; font-size: 0.88rem; font-weight: 600; color: #7D3C00;">
                 Select the TDM sampling strategy for this patient:
               </p>
-              <div class="toggle-buttons" style="margin-top: 0; width: 100%;">
+              <div class="toggle-buttons" style="margin-top: 0; width: 100%; box-sizing: border-box;">
                 <input type="radio" id="method-trough" name="samplingMethod" value="trough" checked>
-                <label for="method-trough" class="toggle-button" style="flex: 1; text-align: center;">🩸 Trough Sampling</label>
+                <label for="method-trough" class="toggle-button" style="flex: 1; text-align: center; font-size: 0.82rem; padding: 9px 8px; white-space: nowrap;">Trough Sampling</label>
                 <input type="radio" id="method-auc" name="samplingMethod" value="auc">
-                <label for="method-auc" class="toggle-button" style="flex: 1; text-align: center;">📈 AUC Sampling</label>
+                <label for="method-auc" class="toggle-button" style="flex: 1; text-align: center; font-size: 0.82rem; padding: 9px 8px; white-space: nowrap;">AUC Sampling</label>
               </div>
               <p style="margin: 10px 0 0 0; font-size: 0.8rem; color: #666; font-style: italic;">
                 Trough = pre-dose only &nbsp;|&nbsp; AUC = pre-dose + post-dose (peak)
@@ -78,9 +78,9 @@
           <!-- Loading Dose (Optional) -->
           <div class="form-group">
             <label for="ld_date">Loading Dose Date & Time (optional):</label>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-              <input type="date" id="ld_date" style="flex: 0 0 155px; min-width: 140px; max-width: 165px;">
-              <select id="ld_hour" style="flex: 0 0 70px;">
+            <div style="display: flex; gap: 6px; align-items: stretch; flex-wrap: nowrap;">
+              <input type="date" id="ld_date" style="flex: 1 1 0; min-width: 0; height: 40px; padding: 0 8px; box-sizing: border-box;">
+              <select id="ld_hour" style="flex: 0 0 52px; height: 40px; padding: 0 2px; box-sizing: border-box;">
                 <option value="">HH</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -95,14 +95,14 @@
                 <option value="11">11</option>
                 <option value="12">12</option>
               </select>
-              <select id="ld_minute" style="flex: 0 0 70px;">
+              <select id="ld_minute" style="flex: 0 0 52px; height: 40px; padding: 0 2px; box-sizing: border-box;">
                 <option value="">MM</option>
                 <option value="00">00</option>
                 <option value="15">15</option>
                 <option value="30">30</option>
                 <option value="45">45</option>
               </select>
-              <select id="ld_ampm" style="flex: 0 0 70px;">
+              <select id="ld_ampm" style="flex: 0 0 56px; height: 40px; padding: 0 2px; box-sizing: border-box;">
                 <option value="">--</option>
                 <option value="AM">AM</option>
                 <option value="PM">PM</option>
@@ -113,9 +113,9 @@
           <!-- First Maintenance Dose (Required) -->
           <div class="form-group">
             <label for="md_date">First Maintenance Dose Date & Time:</label>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-              <input type="date" id="md_date" style="flex: 0 0 155px; min-width: 140px; max-width: 165px;">
-              <select id="md_hour" style="flex: 0 0 70px;">
+            <div style="display: flex; gap: 6px; align-items: stretch; flex-wrap: nowrap;">
+              <input type="date" id="md_date" style="flex: 1 1 0; min-width: 0; height: 40px; padding: 0 8px; box-sizing: border-box;">
+              <select id="md_hour" style="flex: 0 0 52px; height: 40px; padding: 0 2px; box-sizing: border-box;">
                 <option value="">HH</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -130,14 +130,14 @@
                 <option value="11">11</option>
                 <option value="12">12</option>
               </select>
-              <select id="md_minute" style="flex: 0 0 70px;">
+              <select id="md_minute" style="flex: 0 0 52px; height: 40px; padding: 0 2px; box-sizing: border-box;">
                 <option value="">MM</option>
                 <option value="00">00</option>
                 <option value="15">15</option>
                 <option value="30">30</option>
                 <option value="45">45</option>
               </select>
-              <select id="md_ampm" style="flex: 0 0 70px;">
+              <select id="md_ampm" style="flex: 0 0 56px; height: 40px; padding: 0 2px; box-sizing: border-box;">
                 <option value="">--</option>
                 <option value="AM">AM</option>
                 <option value="PM">PM</option>
