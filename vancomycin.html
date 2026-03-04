@@ -53,7 +53,7 @@
             <label for="abw">Actual Body Weight (ABW) (kg):</label>
             <input type="number" id="abw" step="0.1" placeholder="e.g., 70">
             <div id="abwWarning" class="warning-card" style="display:none; margin-top: 10px; font-style: normal;">
-              <strong>Ã¢Å¡Â Ã¯Â¸Â Weight entered is below the validated range for adult patients.</strong><br>
+              <strong>⚠️ Weight entered is below the validated range for adult patients.</strong><br>
               Please consult the Infectious Diseases (ID) or TDM Pharmacy team (Ext: 4124) for individualized dosing advice.
             </div>
           </div>
@@ -224,95 +224,98 @@
 Disclaimer! This note is intended as a template only - please review and adjust it based on your clinical assessment and professional judgement.
         </div>
 
-        <div id="clinicalNoteContainer" class="card clinical-note-card">
+                <div id="clinicalNoteContainer" class="card clinical-note-card">
           <div id="clinicalNoteContent">
             
-            <!-- Header with maroon background and white text -->
-            <div style="background-color: #800000; padding: 15px 15px 15px 20px; margin: 0 -20px 20px -20px; border-radius: 8px 8px 0 0;">
-              <p style="font-weight: 700; margin: 0; font-size: 15px; font-family: Arial, sans-serif; letter-spacing: 0.8px; color: #FFFFFF !important;">
-                  VANCOMYCIN THERAPY RECOMMENDATION
+            <!-- Plain text header -->
+            <div style="margin-bottom: 20px;">
+              <p style="margin: 0; font-size: 14px; font-family: Arial, sans-serif; font-weight: 700;">
+                VANCOMYCIN THERAPY RECOMMENDATION
               </p>
-            </div>
-            
-            <!-- Introduction with better formatting -->
-            <div style="margin-bottom: 24px; padding: 12px; background-color: #FFF9E6; border-left: 4px solid #FFA726; border-radius: 4px;">
-              <p style="margin: 0; font-weight: 400; color: #000000; line-height: 1.6; font-size: 13px;">
+              <p style="margin: 0 0 15px 0; font-size: 13px; font-family: Arial, sans-serif; font-weight: 700;">
+                ========================================
+              </p>
+              <p style="margin: 0; font-weight: 400; line-height: 1.6; font-size: 13px; font-family: Arial, sans-serif;">
                   Received query from Dr <input type="text" id="dr_input" value="" placeholder="Name" style="border: none; border-bottom: 2px solid #FF6F00; background: transparent; width: 150px; padding: 2px 4px; font-family: Arial, sans-serif; font-size: 13px; font-weight: 600;"> regarding IV Vancomycin initiation for this patient.
               </p>
+              <p style="margin: 15px 0 0 0; font-size: 13px; font-family: Arial, sans-serif; font-weight: 700;">
+                ----------------------------------------
+              </p>
             </div>
             
-            <!-- Patient Summary Section with improved design -->
-            <div style="margin-bottom: 24px;">
-              <div style="font-weight: 700; color: #1565C0; font-size: 14px; margin-bottom: 10px; font-family: Arial, sans-serif; padding-bottom: 6px; border-bottom: 2px solid #1565C0;">
-                📋 PATIENT SUMMARY
-              </div>
-              <div style="background-color: #F0F7FF; padding: 16px; border-radius: 6px; border-left: 4px solid #1565C0;">
-                <ul id="noteSummaryList" style="margin: 0 0 8px 0; padding-left: 0; list-style-position: inside; line-height: 2.0; font-size: 13px; color: #333; font-family: Arial, sans-serif;"></ul>
-              </div>
+            <!-- Patient Summary Section -->
+            <div style="margin-bottom: 20px;">
+              <p style="margin: 0 0 10px 0; font-weight: 700; font-size: 14px; font-family: Arial, sans-serif;">
+                PATIENT SUMMARY
+              </p>
+              <div id="noteSummaryList" style="margin: 0 0 12px 0; padding-left: 0; font-size: 13px; font-family: Arial, sans-serif;"></div>
+              <p style="margin: 0; font-size: 13px; font-family: Arial, sans-serif; font-weight: 700;">
+                ----------------------------------------
+              </p>
             </div>
 
-            <!-- Recommended Regimen Section with clear separation -->
-            <div style="margin-bottom: 24px;">
-              <div style="font-weight: 700; color: #FF6F00; font-size: 14px; margin-bottom: 10px; font-family: Arial, sans-serif; padding-bottom: 6px; border-bottom: 2px solid #FF6F00;">
-                💉 RECOMMENDED REGIMEN
+            <!-- Recommended Regimen Section -->
+            <div style="margin-bottom: 20px;">
+              <p style="margin: 0 0 10px 0; font-weight: 700; font-size: 14px; font-family: Arial, sans-serif;">
+                RECOMMENDED REGIMEN
+              </p>
+              <div style="margin-bottom: 12px;">
+                <p style="margin: 0 0 6px 0; font-weight: 700; font-size: 13px; font-family: Arial, sans-serif;">
+                  LOADING DOSE:
+                </p>
+                <p id="noteLDRegimen" style="margin: 0 0 10px 0; line-height: 1.7; font-size: 13px; font-family: Arial, sans-serif;"></p>
               </div>
-              <div style="background-color: #FFF8F0; padding: 16px; border-radius: 6px; border-left: 4px solid #FF6F00;">
-                <div style="margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px dashed #FFE0B2;">
-                  <p style="margin: 0 0 6px 0; font-weight: 800; color: #E65100; font-size: 14px;">
-                    <strong>🔸 Loading Dose</strong>
-                  </p>
-                  <p id="noteLDRegimen" style="margin: 0; line-height: 1.7; font-size: 13px; color: #333; padding-left: 20px;"></p>
-                </div>
-                <div>
-                  <p style="margin: 0 0 6px 0; font-weight: 800; color: #0D47A1; font-size: 14px;">
-                    <strong>🔸 Maintenance Dose</strong>
-                  </p>
-                  <p id="noteMDRegimen" style="margin: 0; line-height: 1.7; font-size: 13px; color: #333; padding-left: 20px;"></p>
-                </div>
+              <div style="margin-bottom: 12px;">
+                <p style="margin: 0 0 6px 0; font-weight: 700; font-size: 13px; font-family: Arial, sans-serif;">
+                  MAINTENANCE DOSE:
+                </p>
+                <p id="noteMDRegimen" style="margin: 0 0 0 0; line-height: 1.7; font-size: 13px; font-family: Arial, sans-serif;"></p>
               </div>
+              <p style="margin: 0; font-size: 13px; font-family: Arial, sans-serif; font-weight: 700;">
+                ----------------------------------------
+              </p>
             </div>
 
-            <!-- TDM Section with enhanced readability -->
-            <div style="margin-bottom: 24px;">
-              <div style="font-weight: 700; color: #00897B; font-size: 14px; margin-bottom: 10px; font-family: Arial, sans-serif; padding-bottom: 6px; border-bottom: 2px solid #00897B;">
-                🩺 THERAPEUTIC DRUG MONITORING (TDM)
+            <!-- TDM Section -->
+            <div style="margin-bottom: 20px;">
+              <p style="margin: 0 0 10px 0; font-weight: 700; font-size: 14px; font-family: Arial, sans-serif;">
+                TDM SAMPLING
+              </p>
+              <div style="margin-bottom: 12px;">
+                <p id="noteTDM1" style="margin: 0 0 6px 0; line-height: 1.7; font-size: 13px; font-family: Arial, sans-serif;">- TDM instructions not generated.</p>
+                <p id="noteTDM2" style="margin: 0 0 0 0; line-height: 1.7; font-size: 13px; font-family: Arial, sans-serif;"></p>
               </div>
-              <div style="background-color: #E8F5E9; padding: 16px; border-radius: 6px; border-left: 4px solid #00897B;">
-                <div style="margin-bottom: 14px; padding: 10px; background-color: white; border-radius: 4px; border: 1px solid #C8E6C9;">
-                  <p id="noteTDM1" style="margin: 0 0 8px 0; line-height: 1.7; font-size: 13px; font-weight: 600; color: #1B5E20;">TDM instructions not generated.</p>
-                  <p id="noteTDM2" style="margin: 0; line-height: 1.7; font-size: 13px; font-weight: 600; color: #1B5E20;"></p>
-                </div>
-                
-                <div style="font-size: 12px; color: #555; line-height: 1.8; margin-top: 12px;">
-                  <p style="margin: 0 0 6px 0;">
-                    <strong style="color: #00695C;">Important:</strong>
-                  </p>
-                  <p style="margin: 0 0 6px 0; padding-left: 12px;">• TDM blood sample should be obtained via venipuncture whenever possible, from the arm opposite to drug administration.</p>
-                  <p style="margin: 0; padding-left: 12px;">• Do not collect TDM samples from central lines (e.g. PICC, CVC, or other central venous catheters).</p>
-                </div>
+              <div style="font-size: 13px; line-height: 1.6; margin-top: 12px; font-family: Arial, sans-serif;">
+                <p style="margin: 0 0 8px 0; font-weight: 700;">
+                  IMPORTANT:
+                </p>
+                <p style="margin: 0 0 6px 0;">- TDM blood sample should be obtained via venipuncture whenever possible, from the arm opposite to drug administration.</p>
+                <p style="margin: 0 0 0 0;">- Do not collect TDM samples from central lines (e.g. PICC, CVC, or other central venous catheters).</p>
               </div>
+              <p style="margin: 15px 0 0 0; font-size: 13px; font-family: Arial, sans-serif; font-weight: 700;">
+                ----------------------------------------
+              </p>
             </div>
 
-            <!-- Remarks Section with professional styling -->
-            <div style="margin-bottom: 0;">
-              <div style="font-weight: 700; color: #D32F2F; font-size: 14px; margin-bottom: 10px; font-family: Arial, sans-serif; padding-bottom: 6px; border-bottom: 2px solid #D32F2F;">
-                ⚠️ REMARKS
-              </div>
-              <div style="background-color: #FFEBEE; padding: 16px; border-radius: 6px; border-left: 4px solid #D32F2F;">
-                <ul style="margin: 0 0 8px 0; padding-left: 0; list-style-position: inside; line-height: 2.0; font-size: 13px; color: #333; font-family: Arial, sans-serif;">
-                  <li>Monitor renal profile (RP) and urine output regularly.</li>
-                  <li>Ensure the patient remains well hydrated while on Vancomycin.</li>
-                  <li>Avoid concomitant nephrotoxic agents where possible.</li>
-                  <li>Infusion rate must not exceed 10 mg/min to minimize infusion-related reactions.</li>
-                </ul>
-              </div>
+            <!-- Remarks Section -->
+            <div style="margin-bottom: 10px;">
+              <p style="margin: 0 0 10px 0; font-weight: 700; font-size: 14px; font-family: Arial, sans-serif;">
+                REMARKS
+              </p>
+              <p style="margin: 0 0 6px 0; font-size: 13px; font-family: Arial, sans-serif;">- Monitor renal profile (RP) and urine output regularly.</p>
+              <p style="margin: 0 0 6px 0; font-size: 13px; font-family: Arial, sans-serif;">- Ensure the patient remains well hydrated while on Vancomycin.</p>
+              <p style="margin: 0 0 6px 0; font-size: 13px; font-family: Arial, sans-serif;">- Avoid concomitant nephrotoxic agents where possible.</p>
+              <p style="margin: 0 0 6px 0; font-size: 13px; font-family: Arial, sans-serif;">- Infusion rate must not exceed 10 mg/min to minimize infusion-related reactions.</p>
+              <p style="margin: 15px 0 0 0; font-size: 13px; font-family: Arial, sans-serif; font-weight: 700;">
+                ========================================
+              </p>
             </div>
 
           </div>
 
           <div class="copy-button-container">
             <button class="copy-button" onclick="copyClinicalNote()">
-                📋 Copy to Notes
+                Copy to Notes
                 <span class="tooltip-text">Copy this note to your clinical documentation.</span>
             </button>
           </div>

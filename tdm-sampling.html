@@ -45,14 +45,10 @@
       </div>
 
       <!-- Disclaimer Box -->
-      <div class="tdm-disclaimer">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-          <span style="font-size: 1.5rem;">⚠️</span>
-          <strong style="font-size: 1.05rem;">Important Disclaimer</strong>
-        </div>
-        <p style="margin: 0; line-height: 1.6;">
-          This calculator and its recommendations are <strong>not applicable</strong> to patients on 
-          renal replacement therapy (RRT) or haemodialysis.
+      <div class="tdm-disclaimer" style="padding: 10px 14px; display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+        <span style="font-size: 1.1rem; flex-shrink: 0;">⚠️</span>
+        <p style="margin: 0; font-size: 0.85rem; line-height: 1.4;">
+          <strong>Disclaimer:</strong> Not applicable to patients on renal replacement therapy (RRT) or haemodialysis.
         </p>
       </div>
 
@@ -63,20 +59,27 @@
           <!-- Sampling Method Toggle -->
           <div class="form-group">
             <label>Sampling Method:</label>
-            <div class="toggle-buttons">
-              <input type="radio" id="method-trough" name="samplingMethod" value="trough" checked>
-              <label for="method-trough" class="toggle-button">Trough Sampling</label>
-              
-              <input type="radio" id="method-auc" name="samplingMethod" value="auc">
-              <label for="method-auc" class="toggle-button">AUC Sampling</label>
+            <div style="background-color: #FFF8E7; border: 1px solid #D68910; border-left: 4px solid #D68910; border-radius: 8px; padding: 12px 14px; margin-top: 6px;">
+              <p style="margin: 0 0 10px 0; font-size: 0.88rem; font-weight: 600; color: #7D3C00;">
+                Select the TDM sampling strategy for this patient:
+              </p>
+              <div class="toggle-buttons" style="margin-top: 0; width: 100%;">
+                <input type="radio" id="method-trough" name="samplingMethod" value="trough" checked>
+                <label for="method-trough" class="toggle-button" style="flex: 1; text-align: center;">🩸 Trough Sampling</label>
+                <input type="radio" id="method-auc" name="samplingMethod" value="auc">
+                <label for="method-auc" class="toggle-button" style="flex: 1; text-align: center;">📈 AUC Sampling</label>
+              </div>
+              <p style="margin: 10px 0 0 0; font-size: 0.8rem; color: #666; font-style: italic;">
+                Trough = pre-dose only &nbsp;|&nbsp; AUC = pre-dose + post-dose (peak)
+              </p>
             </div>
           </div>
 
           <!-- Loading Dose (Optional) -->
           <div class="form-group">
             <label for="ld_date">Loading Dose Date & Time (optional):</label>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <input type="date" id="ld_date" style="flex: 1; min-width: 150px;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <input type="date" id="ld_date" style="flex: 0 0 155px; min-width: 140px; max-width: 165px;">
               <select id="ld_hour" style="flex: 0 0 70px;">
                 <option value="">HH</option>
                 <option value="1">1</option>
@@ -110,8 +113,8 @@
           <!-- First Maintenance Dose (Required) -->
           <div class="form-group">
             <label for="md_date">First Maintenance Dose Date & Time:</label>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <input type="date" id="md_date" style="flex: 1; min-width: 150px;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <input type="date" id="md_date" style="flex: 0 0 155px; min-width: 140px; max-width: 165px;">
               <select id="md_hour" style="flex: 0 0 70px;">
                 <option value="">HH</option>
                 <option value="1">1</option>
@@ -204,53 +207,49 @@
 
         <!-- Clinical Note Section -->
         <h2 style="margin-top: 30px; color: var(--color-primary-dark);">Clinical Note Template</h2>
-        <div class="input-note-style" style="margin-bottom: 20px;">
-          This template is for documentation purposes. Please review and adjust based on clinical assessment.
+        <div class="input-note-style" style="margin-bottom: 10px;">
+          Disclaimer! This note is intended as a template only - please review and adjust it based on your clinical assessment and professional judgement.
+        </div>
+
+        <!-- Time Toggle (shown only when after-hours/weekend alternative exists) -->
+        <div id="noteTimeToggleContainer" style="display:none; margin-bottom: 15px;">
+          <div style="background-color: #FFF3E0; border: 1px solid #FFB74D; border-left: 4px solid #FF6F00; border-radius: 8px; padding: 12px 16px;">
+            <p style="margin: 0 0 8px 0; font-size: 0.88rem; font-weight: 600; color: #E65100;">
+              📋 Choose the sampling time to use in the note template:
+            </p>
+            <div class="toggle-buttons" style="margin-top: 0;">
+              <input type="radio" id="noteTime-original" name="noteTimeChoice" value="original" checked>
+              <label for="noteTime-original" class="toggle-button" style="font-size: 0.85rem; padding: 8px 16px;">Original Time</label>
+              <input type="radio" id="noteTime-adjusted" name="noteTimeChoice" value="adjusted">
+              <label for="noteTime-adjusted" class="toggle-button" style="font-size: 0.85rem; padding: 8px 16px;">Adjusted Time</label>
+            </div>
+            <p id="noteTimeToggleLabel" style="margin: 8px 0 0 0; font-size: 0.8rem; color: #666; font-style: italic;">Adjusted time = After-office hour / Weekend sampling adjustment</p>
+          </div>
         </div>
 
         <div id="clinicalNoteContainer" class="card clinical-note-card">
-          <div id="clinicalNoteContent">
-            
-            <!-- Header -->
-            <div style="background-color: #800000; padding: 15px 15px 15px 20px; margin: 0 -20px 20px -20px; border-radius: 8px 8px 0 0;">
-              <p style="font-weight: 700; margin: 0; font-size: 15px; font-family: Arial, sans-serif; letter-spacing: 0.8px; color: #FFFFFF !important;">
-                VANCOMYCIN TDM SAMPLING PLAN
-              </p>
-            </div>
+          <div id="clinicalNoteContent" style="font-family: Arial, sans-serif; font-size: 13px; line-height: 1.8; color: #000;">
+
+            <!-- Title -->
+            <p style="font-weight: 700; margin: 0 0 2px 0;">VANCOMYCIN TDM SAMPLING PLAN</p>
+            <p style="margin: 0 0 14px 0;">========================================</p>
 
             <!-- Patient Summary -->
-            <div style="margin-bottom: 24px;">
-              <div style="font-weight: 700; color: #1565C0; font-size: 14px; margin-bottom: 10px; font-family: Arial, sans-serif; padding-bottom: 6px; border-bottom: 2px solid #1565C0;">
-                PATIENT SUMMARY
-              </div>
-              <div style="background-color: #F0F7FF; padding: 16px; border-radius: 6px; border-left: 4px solid #1565C0;">
-                <ul id="notePatientSummary" style="margin: 0 0 8px 0; padding-left: 0; list-style-position: inside; line-height: 2.0; font-size: 13px; color: #333; font-family: Arial, sans-serif;"></ul>
-              </div>
-            </div>
+            <p style="font-weight: 700; margin: 0 0 6px 0;">PATIENT SUMMARY</p>
+            <div id="notePatientSummary" style="margin: 0 0 6px 0;"></div>
+            <p style="margin: 0 0 14px 0;">----------------------------------------</p>
 
             <!-- TDM Instructions -->
-            <div style="margin-bottom: 24px;">
-              <div style="font-weight: 700; color: #00897B; font-size: 14px; margin-bottom: 10px; font-family: Arial, sans-serif; padding-bottom: 6px; border-bottom: 2px solid #00897B;">
-                TDM SAMPLING INSTRUCTIONS
-              </div>
-              <div style="background-color: #E8F5E9; padding: 16px; border-radius: 6px; border-left: 4px solid #00897B;">
-                <div id="noteTDMInstructions" style="font-size: 13px; color: #333; line-height: 1.8;"></div>
-              </div>
-            </div>
+            <p style="font-weight: 700; margin: 0 0 6px 0;">TDM SAMPLING INSTRUCTIONS</p>
+            <div id="noteTDMInstructions" style="margin: 0 0 6px 0;"></div>
+            <p style="margin: 0 0 14px 0;">----------------------------------------</p>
 
             <!-- Reminders -->
-            <div style="margin-bottom: 0;">
-              <div style="font-weight: 700; color: #D32F2F; font-size: 14px; margin-bottom: 10px; font-family: Arial, sans-serif; padding-bottom: 6px; border-bottom: 2px solid #D32F2F;">
-                REMINDERS
-              </div>
-              <div style="background-color: #FFEBEE; padding: 16px; border-radius: 6px; border-left: 4px solid #D32F2F;">
-                <ul style="margin: 0; padding-left: 0; list-style-position: inside; line-height: 2.0; font-size: 13px; color: #333; font-family: Arial, sans-serif;">
-                  <li>TDM blood sample should be obtained via venipuncture whenever possible, from the arm opposite to drug administration.</li>
-                  <li>Do not collect TDM samples from central lines (e.g. PICC, CVC, or other central venous catheters).</li>
-                  <li>Document the exact timing of dose administration and sample collection in the patient's medical record.</li>
-                </ul>
-              </div>
-            </div>
+            <p style="font-weight: 700; margin: 0 0 6px 0;">REMINDERS</p>
+            <p style="margin: 0 0 4px 0;">- TDM blood sample should be obtained via venipuncture whenever possible, from the arm opposite to drug administration.</p>
+            <p style="margin: 0 0 4px 0;">- Do not collect TDM samples from central lines (e.g. PICC, CVC, or other central venous catheters).</p>
+            <p style="margin: 0 0 4px 0;">- Document the exact timing of dose administration and sample collection in the patient's medical record.</p>
+            <p style="margin: 14px 0 0 0;">========================================</p>
 
           </div>
 
@@ -280,8 +279,14 @@
       const calculatorInputs = document.querySelectorAll('#tdm-sampling input, #tdm-sampling select');
       
       calculatorInputs.forEach(element => {
+        if (element.name === 'noteTimeChoice') return; // handled separately
         element.addEventListener('input', calculateTDM);
         element.addEventListener('change', calculateTDM);
+      });
+
+      // Note time toggle
+      document.querySelectorAll('input[name="noteTimeChoice"]').forEach(radio => {
+        radio.addEventListener('change', refreshClinicalNoteFromToggle);
       });
     });
   </script>
