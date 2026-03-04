@@ -37,7 +37,7 @@ function generateFooter() {
         <ol style="margin-left: 20px; margin-top: 5px;">
           <li>Nur Farhana (TDM Pharmacy)</li>
           <li>Hannah Md Mahir, Fong Siew Li & Muhammad Zulhafiz (AMS Pharmacists)</li>
-          <li>PRIC, Medication Safety Team, JK IT & Digital, Pharmacy Dept, HSgB</li>
+          <li>PRIC, Medication Safety Team, JK IT & Digital (Pharmacy Dept, HSgB)</li>
         </ol>
       </li>
       <li><strong>Approved by:</strong> Dr Syamhanin Adnan (Head of Pharmacy Dept, HSgB)</li>
@@ -46,7 +46,7 @@ function generateFooter() {
       <li><strong>Footnote:</strong> Developed for Hospital Sungai Buloh staff use only — for educational and clinical support purposes. 
         This calculator may not cover all aspects of clinical practice; healthcare practitioners are encouraged to review 
         patient details and professionally assess the relevance of this guide to each clinical situation. 
-        This guide is subject to periodic updates. We assume no responsibility for any party that referred to an outdated version.
+        This calculation kit is subject to periodic updates. We assume no responsibility for any party that referred to an outdated version.
       </li>
       <li><strong>📝 Feedback:</strong> We welcome your feedback to improve this tool. 
         <a href="https://forms.gle/nDNDfC2ktjmumdSYA" target="_blank">Click here to submit feedback</a>
