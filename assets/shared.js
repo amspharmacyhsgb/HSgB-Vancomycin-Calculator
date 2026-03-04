@@ -37,7 +37,7 @@ function generateFooter() {
         <ol style="margin-left: 20px; margin-top: 5px;">
           <li>Nur Farhana (TDM Pharmacy)</li>
           <li>Hannah Md Mahir, Fong Siew Li & Muhammad Zulhafiz (AMS Pharmacists)</li>
-          <li>PRIC & Medication Safety Team</li>
+          <li>PRIC, Medication Safety Team, JK IT & Digital, Pharmacy Dept, HSgB</li>
         </ol>
       </li>
       <li><strong>Approved by:</strong> Dr Syamhanin Adnan (Head of Pharmacy Dept, HSgB)</li>
