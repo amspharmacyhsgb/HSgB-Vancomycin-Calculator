@@ -4,6 +4,11 @@
 
 let hasScrolledTDM = false;
 
+// Stores alternative (after-hours / weekend) sampling times for the note toggle
+let adjustedTroughDateTime = null;
+let adjustedPostdoseDateTime = null;
+let adjustedTimeLabel = '';
+
 // Infusion duration mapping (in hours)
 const INFUSION_DURATION = {
   500: 1,
@@ -54,6 +59,15 @@ function clearTDMInputs() {
   document.getElementById('timeRoundingNote').style.display = 'none';
   document.getElementById('frequencyNote').style.display = 'none';
   document.getElementById('tdmOutput').style.display = 'none';
+  
+  // Reset adjusted time state
+  adjustedTroughDateTime = null;
+  adjustedPostdoseDateTime = null;
+  adjustedTimeLabel = '';
+  const toggleContainer = document.getElementById('noteTimeToggleContainer');
+  if (toggleContainer) toggleContainer.style.display = 'none';
+  const originalRadio = document.getElementById('noteTime-original');
+  if (originalRadio) originalRadio.checked = true;
   
   hasScrolledTDM = false;
 }
@@ -226,6 +240,15 @@ function calculateTDM() {
     displayPostdoseSampling(postdoseDateTime, samplingDoseNum, troughDateTime, infusionDuration);
   }
   
+  // Reset adjusted time state for this calculation run
+  adjustedTroughDateTime = null;
+  adjustedPostdoseDateTime = null;
+  adjustedTimeLabel = '';
+  const toggleContainer = document.getElementById('noteTimeToggleContainer');
+  if (toggleContainer) toggleContainer.style.display = 'none';
+  const originalRadio = document.getElementById('noteTime-original');
+  if (originalRadio) originalRadio.checked = true;
+
   // Check for after-hours and weekend warnings
   const shouldShowWeekend = isWeekend(troughDateTime) || (samplingMethod === 'auc' && isWeekend(calculatePostdoseTime(troughDateTime, infusionDuration)));
   const shouldShowAfterHours = !shouldShowWeekend && (isAfterHours(troughDateTime) || (samplingMethod === 'auc' && isAfterHours(calculatePostdoseTime(troughDateTime, infusionDuration))));
@@ -445,6 +468,19 @@ function displayAfterHoursWarning(troughDateTime, isAUC, infusionDuration) {
   nextMorning.setDate(nextMorning.getDate() + 1);
   nextMorning.setHours(5, 30, 0, 0);
   
+  // Store adjusted times globally for the note toggle
+  adjustedTroughDateTime = new Date(nextMorning);
+  adjustedTimeLabel = 'Next morning (after office hours adjustment)';
+  if (isAUC) {
+    const adj = new Date(nextMorning);
+    adj.setMinutes(adj.getMinutes() + 30);
+    adj.setHours(adj.getHours() + infusionDuration + 1);
+    adjustedPostdoseDateTime = adj;
+  } else {
+    adjustedPostdoseDateTime = null;
+  }
+  showNoteTimeToggle('after-hours');
+
   const troughFormatted = formatDateTime(nextMorning);
   
   let html = `
@@ -492,7 +528,20 @@ function displayWeekendWarning(troughDateTime, isAUC, infusionDuration) {
   // Calculate postponed times to next working day at 5:30 AM
   const nextWorking = getNextWorkingDay(troughDateTime);
   nextWorking.setHours(5, 30, 0, 0);
-  
+
+  // Store adjusted times globally for the note toggle
+  adjustedTroughDateTime = new Date(nextWorking);
+  adjustedTimeLabel = 'Next working day (weekend adjustment)';
+  if (isAUC) {
+    const adj = new Date(nextWorking);
+    adj.setMinutes(adj.getMinutes() + 30);
+    adj.setHours(adj.getHours() + infusionDuration + 1);
+    adjustedPostdoseDateTime = adj;
+  } else {
+    adjustedPostdoseDateTime = null;
+  }
+  showNoteTimeToggle('weekend');
+
   const troughFormatted = formatDateTime(nextWorking);
   
   let html = `
@@ -541,11 +590,61 @@ function displayWeekendWarning(troughDateTime, isAUC, infusionDuration) {
 }
 
 // =============================================================
+// Note Time Toggle Helpers
+// =============================================================
+
+function showNoteTimeToggle(type) {
+  const container = document.getElementById('noteTimeToggleContainer');
+  const label = document.getElementById('noteTimeToggleLabel');
+  if (!container) return;
+  container.style.display = 'block';
+  if (label) {
+    label.textContent = 'Adjusted time = Adjusted after office hour / weekend sampling to the next working day';
+  }
+}
+
+// Called when the user clicks Original / Adjusted toggle
+function refreshClinicalNoteFromToggle() {
+  // Re-read all the inputs and re-call generateClinicalNote with current state
+  const ldDate   = document.getElementById('ld_date').value;
+  const ldHour   = document.getElementById('ld_hour').value;
+  const ldMinute = document.getElementById('ld_minute').value;
+  const ldAmPm   = document.getElementById('ld_ampm').value;
+  const mdDate   = document.getElementById('md_date').value;
+  const mdHour   = document.getElementById('md_hour').value;
+  const mdMinute = document.getElementById('md_minute').value;
+  const mdAmPm   = document.getElementById('md_ampm').value;
+  const dose     = document.getElementById('dose').value;
+  const frequency = document.getElementById('frequency').value;
+  const samplingMethod = document.querySelector('input[name="samplingMethod"]:checked')?.value;
+
+  if (!mdDate || !mdHour || !mdMinute || !mdAmPm || !dose || !frequency) return;
+
+  const mdHour24 = convertTo24Hour(parseInt(mdHour), mdAmPm);
+  const firstMDDateTime = new Date(mdDate);
+  firstMDDateTime.setHours(mdHour24, parseInt(mdMinute), 0, 0);
+
+  const samplingDoseNum  = SAMPLING_DOSE_NUMBER[frequency];
+  const infusionDuration = INFUSION_DURATION[dose];
+  const troughDateTime   = calculateTroughTime(firstMDDateTime, frequency, samplingDoseNum);
+
+  generateClinicalNote(ldDate, ldHour, ldMinute, ldAmPm, mdDate, mdHour, mdMinute, mdAmPm, dose, frequency, samplingMethod, troughDateTime, samplingDoseNum, infusionDuration);
+}
+
+// =============================================================
 // Clinical Note Generation
 // =============================================================
 
 function generateClinicalNote(ldDate, ldHour, ldMinute, ldAmPm, mdDate, mdHour, mdMinute, mdAmPm, dose, frequency, samplingMethod, troughDateTime, samplingDoseNum, infusionDuration) {
-  // Patient Summary
+  
+  // Determine whether to use original or adjusted times
+  const useAdjusted = document.getElementById('noteTime-adjusted')?.checked && adjustedTroughDateTime !== null;
+  const effectiveTrough  = useAdjusted ? adjustedTroughDateTime : troughDateTime;
+  const effectivePostdose = useAdjusted
+    ? adjustedPostdoseDateTime
+    : (samplingMethod === 'auc' ? calculatePostdoseTime(troughDateTime, infusionDuration) : null);
+
+  // Patient Summary — plain dash style
   let summaryHTML = '';
   
   if (ldDate && ldHour !== '' && ldMinute !== '' && ldAmPm !== '') {
@@ -553,43 +652,52 @@ function generateClinicalNote(ldDate, ldHour, ldMinute, ldAmPm, mdDate, mdHour, 
     const ldDateTime = new Date(ldDate);
     ldDateTime.setHours(ldHour24, parseInt(ldMinute), 0, 0);
     const ldFormatted = formatDateTime(ldDateTime);
-    summaryHTML += `<li><strong>Loading Dose:</strong> ${ldFormatted.full}</li>`;
+    summaryHTML += `<p style="margin: 0 0 3px 0;">- <strong>Loading Dose:</strong> ${ldFormatted.full}</p>`;
   }
   
   const mdHour24 = convertTo24Hour(parseInt(mdHour), mdAmPm);
   const mdDateTime = new Date(mdDate);
   mdDateTime.setHours(mdHour24, parseInt(mdMinute), 0, 0);
   const mdFormatted = formatDateTime(mdDateTime);
-  summaryHTML += `<li><strong>First Maintenance Dose:</strong> ${mdFormatted.full}</li>`;
-  summaryHTML += `<li><strong>Vancomycin Regimen:</strong> ${dose} mg ${frequency}</li>`;
+  summaryHTML += `<p style="margin: 0 0 3px 0;">- <strong>First Maintenance Dose:</strong> ${mdFormatted.full}</p>`;
+  summaryHTML += `<p style="margin: 0 0 3px 0;">- <strong>Vancomycin Regimen:</strong> ${dose} mg ${frequency}</p>`;
   
   const methodText = samplingMethod === 'auc' ? 'AUC Sampling (Pre-dose + Post-dose)' : 'Trough Sampling (Pre-dose only)';
-  summaryHTML += `<li><strong>Sampling Method:</strong> ${methodText}</li>`;
+  summaryHTML += `<p style="margin: 0 0 3px 0;">- <strong>Sampling Method:</strong> ${methodText}</p>`;
   
   document.getElementById('notePatientSummary').innerHTML = summaryHTML;
   
-  // TDM Instructions
-  const troughFormatted = formatDateTime(troughDateTime);
+  // TDM Instructions — plain dash style, Adjusted badge appears dynamically
+  const troughFormatted = formatDateTime(effectiveTrough);
   const ordinal = samplingDoseNum === 2 ? '2nd' : (samplingDoseNum === 3 ? '3rd' : '4th');
-  
-  let tdmHTML = `<p style="margin: 0 0 10px 0;"><strong style="color: #2E7D32;">Pre-dose (Trough):</strong></p>`;
-  tdmHTML += `<p style="margin: 0 0 5px 0; padding-left: 20px;">${troughFormatted.full}</p>`;
-  tdmHTML += `<p style="margin: 0 0 15px 20px; font-size: 0.9rem; color: #666;">(30 minutes before the ${ordinal} maintenance dose)</p>`;
-  
-  if (samplingMethod === 'auc') {
-    const postdoseDateTime = calculatePostdoseTime(troughDateTime, infusionDuration);
-    const postdoseFormatted = formatDateTime(postdoseDateTime);
-    
-    const doseTime = new Date(troughDateTime);
-    doseTime.setMinutes(doseTime.getMinutes() + 30);
-    const doseFormatted = formatDateTime(doseTime);
-    
-    tdmHTML += `<p style="margin: 0 0 10px 0;"><strong style="color: #1565C0;">Post-dose (Peak):</strong></p>`;
-    tdmHTML += `<p style="margin: 0 0 5px 20px; font-style: italic; color: #555; font-size: 0.9rem;">Assuming dose given at ${doseFormatted.time} and infused over ${infusionDuration} hour${infusionDuration !== 1 ? 's' : ''}:</p>`;
-    tdmHTML += `<p style="margin: 0 0 5px 0; padding-left: 20px;">${postdoseFormatted.full}</p>`;
-    tdmHTML += `<p style="margin: 0 0 0 20px; font-size: 0.9rem; color: #666;">(1 hour after completion of infusion)</p>`;
+  const adjustedBadge = useAdjusted
+    ? ` <span style="background-color:#FF6F00; color:white; font-size:0.75rem; padding:2px 7px; border-radius:10px; font-weight:600; vertical-align:middle;">Adjusted</span>`
+    : '';
+
+  let tdmHTML = '';
+
+  tdmHTML += `<p style="margin: 0 0 2px 0;">- <strong>Pre-dose (Trough):</strong>${adjustedBadge}</p>`;
+  tdmHTML += `<p style="margin: 0 0 2px 0; padding-left: 14px;">${troughFormatted.full}</p>`;
+  if (useAdjusted) {
+    tdmHTML += `<p style="margin: 0 0 10px 14px; font-size: 0.88rem; color: #555;">(30 minutes before 6:00 AM dose)</p>`;
+  } else {
+    tdmHTML += `<p style="margin: 0 0 10px 14px; font-size: 0.88rem; color: #555;">(30 minutes before the ${ordinal} maintenance dose)</p>`;
   }
-  
+
+  if (samplingMethod === 'auc' && effectivePostdose) {
+    const postdoseFormatted = formatDateTime(effectivePostdose);
+    tdmHTML += `<p style="margin: 0 0 2px 0;">- <strong>Post-dose (Peak):</strong>${adjustedBadge}</p>`;
+    tdmHTML += `<p style="margin: 0 0 2px 0; padding-left: 14px;">${postdoseFormatted.full}</p>`;
+    if (useAdjusted) {
+      tdmHTML += `<p style="margin: 0 0 0 14px; font-size: 0.88rem; color: #555;">(1 hour after infusion completion; assuming dose given at 6:00 AM, infused over ${infusionDuration} hour${infusionDuration !== 1 ? 's' : ''})</p>`;
+    } else {
+      const doseTime = new Date(troughDateTime);
+      doseTime.setMinutes(doseTime.getMinutes() + 30);
+      const doseFormatted = formatDateTime(doseTime);
+      tdmHTML += `<p style="margin: 0 0 0 14px; font-size: 0.88rem; color: #555;">(1 hour after infusion completion; assuming dose given at ${doseFormatted.time}, infused over ${infusionDuration} hour${infusionDuration !== 1 ? 's' : ''})</p>`;
+    }
+  }
+
   document.getElementById('noteTDMInstructions').innerHTML = tdmHTML;
 }
 
@@ -609,21 +717,75 @@ function copyClinicalNote() {
   
   const htmlToCopy = tempDiv.innerHTML;
   
-  // Plain text version
-  const summaryItems = document.getElementById('notePatientSummary').textContent.trim();
-  const tdmInstructions = document.getElementById('noteTDMInstructions').textContent.trim();
-  
-  let textToCopy = '--- Hospital Sungai Buloh Clinical Note ---\n\n';
-  textToCopy += 'VANCOMYCIN TDM SAMPLING PLAN\n\n';
+  // Plain text version — built directly (don't scrape innerHTML for TDM section)
+  const useAdjusted = document.getElementById('noteTime-adjusted')?.checked && adjustedTroughDateTime !== null;
+  const summaryDiv = document.getElementById('notePatientSummary');
+  const summaryText = summaryDiv ? summaryDiv.innerText.trim() : '';
+
+  let textToCopy = '';
+  textToCopy += 'VANCOMYCIN TDM SAMPLING PLAN\n';
+  textToCopy += '========================================\n';
   textToCopy += 'PATIENT SUMMARY\n';
-  textToCopy += summaryItems.replace(/•/g, '').split('\n').map(line => '• ' + line.trim()).filter(line => line.length > 2).join('\n') + '\n\n';
+  textToCopy += summaryText + '\n';
+  textToCopy += '----------------------------------------\n';
   textToCopy += 'TDM SAMPLING INSTRUCTIONS\n';
-  textToCopy += tdmInstructions.replace(/\n\s+/g, '\n').trim() + '\n\n';
+
+  // Rebuild TDM text cleanly
+  const dose      = document.getElementById('dose').value;
+  const frequency = document.getElementById('frequency').value;
+  const samplingMethod = document.querySelector('input[name="samplingMethod"]:checked')?.value;
+  const mdDate   = document.getElementById('md_date').value;
+  const mdHour   = document.getElementById('md_hour').value;
+  const mdMinute = document.getElementById('md_minute').value;
+  const mdAmPm   = document.getElementById('md_ampm').value;
+
+  const mdHour24 = convertTo24Hour(parseInt(mdHour), mdAmPm);
+  const firstMDDateTime = new Date(mdDate);
+  firstMDDateTime.setHours(mdHour24, parseInt(mdMinute), 0, 0);
+  const samplingDoseNum  = SAMPLING_DOSE_NUMBER[frequency];
+  const infusionDuration = INFUSION_DURATION[dose];
+  const troughDateTime   = calculateTroughTime(firstMDDateTime, frequency, samplingDoseNum);
+  const ordinal = samplingDoseNum === 2 ? '2nd' : (samplingDoseNum === 3 ? '3rd' : '4th');
+
+  const effectiveTrough   = useAdjusted ? adjustedTroughDateTime : troughDateTime;
+  const effectivePostdose = useAdjusted
+    ? adjustedPostdoseDateTime
+    : (samplingMethod === 'auc' ? calculatePostdoseTime(troughDateTime, infusionDuration) : null);
+
+  const troughFmt = formatDateTime(effectiveTrough);
+
+  if (useAdjusted) {
+    textToCopy += `- Pre-dose (Trough): (After-office hour / Weekend sampling adjustment)\n`;
+    textToCopy += `  ${troughFmt.full}\n`;
+    textToCopy += `  (30 minutes before 6:00 AM dose)\n`;
+  } else {
+    textToCopy += `- Pre-dose (Trough):\n`;
+    textToCopy += `  ${troughFmt.full}\n`;
+    textToCopy += `  (30 minutes before the ${ordinal} maintenance dose)\n`;
+  }
+
+  if (samplingMethod === 'auc' && effectivePostdose) {
+    const postFmt = formatDateTime(effectivePostdose);
+    if (useAdjusted) {
+      textToCopy += `- Post-dose (Peak): (After-office hour / Weekend sampling adjustment)\n`;
+      textToCopy += `  ${postFmt.full}\n`;
+      textToCopy += `  (1 hour after infusion completion; assuming dose given at 6:00 AM, infused over ${infusionDuration} hour${infusionDuration !== 1 ? 's' : ''})\n`;
+    } else {
+      const doseTime = new Date(troughDateTime);
+      doseTime.setMinutes(doseTime.getMinutes() + 30);
+      const doseFmt = formatDateTime(doseTime);
+      textToCopy += `- Post-dose (Peak):\n`;
+      textToCopy += `  ${postFmt.full}\n`;
+      textToCopy += `  (1 hour after infusion completion; assuming dose given at ${doseFmt.time}, infused over ${infusionDuration} hour${infusionDuration !== 1 ? 's' : ''})\n`;
+    }
+  }
+
+  textToCopy += '----------------------------------------\n';
   textToCopy += 'REMINDERS\n';
-  textToCopy += '• TDM blood sample should be obtained via venipuncture whenever possible, from the arm opposite to drug administration.\n';
-  textToCopy += '• Do not collect TDM samples from central lines (e.g. PICC, CVC, or other central venous catheters).\n';
-  textToCopy += '• Document the exact timing of dose administration and sample collection in the patient\'s medical record.\n';
-  textToCopy += '-----------------------------------------------------------\n';
+  textToCopy += '- TDM blood sample should be obtained via venipuncture whenever possible, from the arm opposite to drug administration.\n';
+  textToCopy += '- Do not collect TDM samples from central lines (e.g. PICC, CVC, or other central venous catheters).\n';
+  textToCopy += '- Document the exact timing of dose administration and sample collection in the patient\'s medical record.\n';
+  textToCopy += '========================================\n';
   
   // Copy to clipboard
   const blobHtml = new Blob([htmlToCopy], { type: 'text/html' });

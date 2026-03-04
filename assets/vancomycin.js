@@ -556,11 +556,11 @@ function calculateVancomycin() {
       </p>`;
 
     // For clinical note
-    noteTDM1_val = timingText.replace('30 min BEFORE the', '30 min before the').replace('random TDM level', 'TDM level').replace('.', '') + ` - Date & time: <input type="text" id="tdm1DateTime" value="" placeholder="[enter date/time]">`;
-    noteTDM2_val = `Take Post-level (Peak) 1 hour after completion of infusion - Date & time: <input type="text" id="tdm2DateTime" value="" placeholder="[enter date/time]">`;
+    noteTDM1_val = '- ' + timingText.replace('30 min BEFORE the', '30 min before the').replace('random TDM level', 'TDM level').replace('.', '') + ` - Date & time: <input type="text" id="tdm1DateTime" value="" placeholder="[enter date/time]">`;
+    noteTDM2_val = `- Take Post-level (Peak) 1 hour after completion of infusion - Date & time: <input type="text" id="tdm2DateTime" value="" placeholder="[enter date/time]">`;
   } else {
     section42HTML = '';
-    noteTDM1_val  = timingText.replace('30 min BEFORE the', '30 min before the').replace('random TDM level', 'TDM level').replace('.', '') + ` - Date & time: <input type="text" id="tdm1DateTime" value="" placeholder="[enter date/time]">`;
+    noteTDM1_val  = '- ' + timingText.replace('30 min BEFORE the', '30 min before the').replace('random TDM level', 'TDM level').replace('.', '') + ` - Date & time: <input type="text" id="tdm1DateTime" value="" placeholder="[enter date/time]">`;
     noteTDM2_val  = '';
   }
 
@@ -598,18 +598,17 @@ function calculateVancomycin() {
   // Clinical Note section (editable indication field)
   // -------------------------------------------------------
   const clinicalNoteSummaryHTML = `
-      <ul>
-          <li><strong>Actual Body Weight:</strong> ${abw} kg</li>
-          <li><strong>Dialysis Status:</strong> ${document.getElementById('dialysisStatus').options[document.getElementById('dialysisStatus').selectedIndex].text}</li>
-          ${status === 'HD' ? `<li><strong>Vancomycin Timing:</strong> ${document.getElementById('dialysisTiming').options[document.getElementById('dialysisTiming').selectedIndex].text.replace('Vancomycin started or planned to be given ', '')}</li>` : ''}
-          ${status === 'notHD' && scr_input ? `<li><strong>Serum Creatinine:</strong> ${scr_input} µmol/L</li>` : ''}
-          ${status === 'notHD' ? `<li><strong>Creatinine Clearance:</strong> ${crcl.toFixed(1)} ml/min</li>` : ''}
-          <li><strong>Indication:</strong> ${document.getElementById('indication').options[document.getElementById('indication').selectedIndex].text.split('(')[0].trim()} <input type="text" id="indicationSpecify" value="" placeholder="(please specify)" style="border: none; border-bottom: 2px solid #D68910; background: transparent; width: 300px; padding: 2px 4px; font-family: Arial, sans-serif; font-size: 13px; font-weight: normal;"></li>
-          <li><strong>IV Access:</strong> ${document.getElementById('ivAccess').options[document.getElementById('ivAccess').selectedIndex].text}</li>
-      </ul>`;
+      <p style="margin: 0 0 4px 0;">- <strong>BW:</strong> ${abw} kg</p>
+      ${status === 'notHD' && crcl < 30 ? `<p style="margin: 0 0 4px 0;">- <strong>Dialysis Status:</strong> Not on HD</p>` : ''}
+      ${status === 'HD' ? `<p style="margin: 0 0 4px 0;">- <strong>Dialysis Status:</strong> ESRF on HD</p>` : ''}
+      ${status === 'HD' ? `<p style="margin: 0 0 4px 0;">- <strong>Vancomycin Timing:</strong> ${document.getElementById('dialysisTiming').options[document.getElementById('dialysisTiming').selectedIndex].text.replace('Vancomycin started or planned to be given ', '')}</p>` : ''}
+      ${status === 'notHD' && scr_input ? `<p style="margin: 0 0 4px 0;">- <strong>Cr:</strong> ${scr_input} µmol/L</p>` : ''}
+      ${status === 'notHD' ? `<p style="margin: 0 0 4px 0;">- <strong>CrCl:</strong> ${crcl.toFixed(1)} ml/min</p>` : ''}
+      <p style="margin: 0 0 4px 0;">- <strong>Indication:</strong> ${document.getElementById('indication').options[document.getElementById('indication').selectedIndex].text.split('(')[0].trim()} <input type="text" id="indicationSpecify" value="" placeholder="(specify)" style="border: none; border-bottom: 2px solid #D68910; background: transparent; width: 200px; padding: 2px 4px; font-family: Arial, sans-serif; font-size: 13px; font-weight: normal;"></p>
+      <p style="margin: 0 0 4px 0;">- <strong>IV Access:</strong> ${document.getElementById('ivAccess').options[document.getElementById('ivAccess').selectedIndex].text}</p>`;
   if (document.getElementById('noteSummaryList'))  document.getElementById('noteSummaryList').innerHTML  = clinicalNoteSummaryHTML;
-  if (document.getElementById('noteLDRegimen'))    document.getElementById('noteLDRegimen').textContent  = ldAdminRegimenText.replace('IV STAT', 'IV STAT');
-  if (document.getElementById('noteMDRegimen'))    document.getElementById('noteMDRegimen').textContent  = mdAdminRegimenText.replace('IV Q', 'IV q');
+  if (document.getElementById('noteLDRegimen'))    document.getElementById('noteLDRegimen').textContent  = '- ' + ldAdminRegimenText.replace('IV STAT', 'IV STAT');
+  if (document.getElementById('noteMDRegimen'))    document.getElementById('noteMDRegimen').textContent  = '- ' + mdAdminRegimenText.replace('IV Q', 'IV q');
 }
 
 // =============================================================
@@ -692,72 +691,87 @@ function copyClinicalNote() {
   const drInputLiveEl = document.getElementById('dr_input');
   const doctorNamePlaceholder = drInputLiveEl ? drInputLiveEl.value.trim() : '_______________';
 
-  let textToCopy  = '--- Hospital Sungai Buloh Clinical Note ---\n\n';
-  textToCopy     += 'VANCOMYCIN THERAPY RECOMMENDATION\n\n';
-  textToCopy     += `Received query from Dr ${doctorNamePlaceholder} regarding IV Vancomycin initiation for this patient.\n\n`;
+  let textToCopy = '';
+  textToCopy += 'VANCOMYCIN THERAPY RECOMMENDATION\n';
+  textToCopy += '========================================\n';
+  textToCopy += `Received query from Dr ${doctorNamePlaceholder} regarding IV Vancomycin initiation for this patient.\n`;
+  textToCopy += '----------------------------------------\n';
 
-  const abw            = parseFloat(document.getElementById('abw').value);
-  const statusText     = document.getElementById('dialysisStatus').options[document.getElementById('dialysisStatus').selectedIndex].text;
-  const crclValue      = document.getElementById('crcl').value;
+  const abw = parseFloat(document.getElementById('abw').value);
+  const statusText = document.getElementById('dialysisStatus').options[document.getElementById('dialysisStatus').selectedIndex].text;
+  const crclValue = document.getElementById('crcl').value;
   const noteLDRegimenText = document.getElementById('noteLDRegimen').textContent;
-  let   noteMDRegimenText = document.getElementById('noteMDRegimen').textContent;
+  let noteMDRegimenText = document.getElementById('noteMDRegimen').textContent;
   if (noteMDRegimenText.includes('not applicable')) noteMDRegimenText = 'Maintenance dose based on TDM. Contact TDM Pharmacy for advice.';
 
-  textToCopy += 'Patient Summary (as provided by the primary care team):\n';
-  textToCopy += `• Actual Body Weight: ${abw} kg\n`;
-  textToCopy += `• Dialysis Status: ${statusText}\n`;
-
-  if (statusText.includes('Haemodialysis')) {
-      const timingText = document.getElementById('dialysisTiming').options[document.getElementById('dialysisTiming').selectedIndex].text;
-      if (!timingText.includes('Please select')) {
-          textToCopy += `• Vancomycin Timing: ${timingText.replace('Vancomycin started or planned to be given ', '')}\n`;
-      }
+  textToCopy += 'PATIENT SUMMARY\n';
+  textToCopy += `- BW: ${abw} kg\n`;
+  
+  if (statusText.includes('ESRF on')) {
+    textToCopy += `- Dialysis Status: ESRF on HD\n`;
+    const timingText = document.getElementById('dialysisTiming').options[document.getElementById('dialysisTiming').selectedIndex].text;
+    if (!timingText.includes('Please select')) {
+      textToCopy += `- Vancomycin Timing: ${timingText.replace('Vancomycin started or planned to be given ', '')}\n`;
+    }
   }
 
   if (statusText === 'Not on Haemodialysis') {
-      const scrValue = document.getElementById('scr_input').value;
-      if (scrValue) {
-          textToCopy += `• Serum Creatinine (µmol/L): ${scrValue}\n`;
-      }
-      textToCopy += `• Creatinine Clearance: ${crclValue} ml/min\n`;
+    const crclNum = parseFloat(crclValue);
+    if (crclNum < 30) {
+      textToCopy += `- Dialysis Status: Not on HD\n`;
+    }
+    const scrValue = document.getElementById('scr_input').value;
+    if (scrValue) {
+      textToCopy += `- Cr: ${scrValue} umol/L\n`;
+    }
+    textToCopy += `- CrCl: ${crclValue} ml/min\n`;
   }
 
   const indicationMainText = document.getElementById('indication').options[document.getElementById('indication').selectedIndex].text.split('(')[0].trim();
-  const indicationSpec     = document.getElementById('indicationSpecify') ? document.getElementById('indicationSpecify').value.trim() : '';
-  const fullIndication     = indicationSpec ? `${indicationMainText} (${indicationSpec})` : indicationMainText;
-  textToCopy += `• Indication: ${fullIndication}\n`;
-  textToCopy += `• Type of IV Access: ${document.getElementById('ivAccess').options[document.getElementById('ivAccess').selectedIndex].text}\n\n`;
+  const indicationSpec = document.getElementById('indicationSpecify') ? document.getElementById('indicationSpecify').value.trim() : '';
+  const fullIndication = indicationSpec ? `${indicationMainText} (${indicationSpec})` : indicationMainText;
+  textToCopy += `- Indication: ${fullIndication}\n`;
+  textToCopy += `- IV Access: ${document.getElementById('ivAccess').options[document.getElementById('ivAccess').selectedIndex].text}\n`;
+  textToCopy += '----------------------------------------\n';
 
-  textToCopy += 'Recommended Regimen:\n';
-  textToCopy += `Loading Dose: ${noteLDRegimenText}\n`;
-  textToCopy += `Maintenance Dose: ${noteMDRegimenText}\n\n`;
+  textToCopy += 'RECOMMENDED REGIMEN\n';
+  textToCopy += 'LOADING DOSE:\n';
+  textToCopy += `${noteLDRegimenText}\n`;
+  textToCopy += 'MAINTENANCE DOSE:\n';
+  textToCopy += `${noteMDRegimenText}\n`;
+  textToCopy += '----------------------------------------\n';
 
-  textToCopy += 'Therapeutic Drug Monitoring (TDM):\n';
+  textToCopy += 'TDM SAMPLING\n';
 
   // TDM line 1
   const tdm1Element = document.getElementById('noteTDM1');
   if (tdm1Element && tdm1Element.innerHTML && !tdm1Element.innerHTML.includes('not generated')) {
-    const tdm1Input       = document.getElementById('tdm1DateTime');
-    const tdm1Value       = tdm1Input ? tdm1Input.value.trim() : '';
+    const tdm1Input = document.getElementById('tdm1DateTime');
+    const tdm1Value = tdm1Input ? tdm1Input.value.trim() : '';
     const beforeDateTime1 = tdm1Element.innerHTML.split('- Date & time:')[0].replace(/<[^>]*>/g, '').trim();
-    textToCopy += `• ${beforeDateTime1} - Date/Time: ${tdm1Value}\n`;
+    textToCopy += `${beforeDateTime1} - Date/Time: ${tdm1Value}\n`;
   }
 
   // TDM line 2
   const tdm2Element = document.getElementById('noteTDM2');
   if (tdm2Element && tdm2Element.innerHTML && tdm2Element.innerHTML.includes('Post-level')) {
-    const tdm2Input       = document.getElementById('tdm2DateTime');
-    const tdm2Value       = tdm2Input ? tdm2Input.value.trim() : '';
+    const tdm2Input = document.getElementById('tdm2DateTime');
+    const tdm2Value = tdm2Input ? tdm2Input.value.trim() : '';
     const beforeDateTime2 = tdm2Element.innerHTML.split('- Date & time:')[0].replace(/<[^>]*>/g, '').trim();
-    textToCopy += `• ${beforeDateTime2} - Date/Time: ${tdm2Value}\n`;
+    textToCopy += `${beforeDateTime2} - Date/Time: ${tdm2Value}\n`;
   }
 
-  textToCopy += '\nRemarks:\n';
-  textToCopy += '• Monitor renal profile (RP) and urine output regularly.\n';
-  textToCopy += '• Ensure the patient remains well hydrated while on Vancomycin.\n';
-  textToCopy += '• Avoid concomitant nephrotoxic agents where possible.\n';
-  textToCopy += '• Infusion rate must not exceed 10 mg/min to minimize infusion-related reactions.\n';
-  textToCopy += '-----------------------------------------------------------\n';
+  textToCopy += 'IMPORTANT:\n';
+  textToCopy += '- TDM blood sample should be obtained via venipuncture whenever possible, from the arm opposite to drug administration.\n';
+  textToCopy += '- Do not collect TDM samples from central lines (e.g. PICC, CVC, or other central venous catheters).\n';
+  textToCopy += '----------------------------------------\n';
+
+  textToCopy += 'REMARKS\n';
+  textToCopy += '- Monitor renal profile (RP) and urine output regularly.\n';
+  textToCopy += '- Ensure the patient remains well hydrated while on Vancomycin.\n';
+  textToCopy += '- Avoid concomitant nephrotoxic agents where possible.\n';
+  textToCopy += '- Infusion rate must not exceed 10 mg/min to minimize infusion-related reactions.\n';
+  textToCopy += '========================================\n';
 
   // -------------------------------------------------------
   // Write both HTML and plain text to clipboard
