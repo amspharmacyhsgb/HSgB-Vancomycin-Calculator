@@ -32,7 +32,7 @@ function generateFooter() {
   const footerHTML = `
     <div class="footer-title">Disclaimer</div>
     <ul>
-      <li><strong>Developer:</strong> Izyana Munirah Idham (AMS Pharmacist, HSgB)</li>
+      <li><strong>Developed by:</strong> Izyana Munirah Idham (AMS Pharmacist, HSgB)</li>
       <li><strong>In collaboration with:</strong>
         <ol style="margin-left: 20px; margin-top: 5px;">
           <li>Nur Farhana (TDM Pharmacy)</li>
