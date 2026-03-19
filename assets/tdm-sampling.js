@@ -4,10 +4,16 @@
 
 let hasScrolledTDM = false;
 
-// Stores alternative (after-hours / weekend) sampling times for the note toggle
+// Stores alternative (after-hours / weekend) sampling times
 let adjustedTroughDateTime = null;
 let adjustedPostdoseDateTime = null;
 let adjustedTimeLabel = '';
+
+// Urgency state
+let isUrgentCase = false;
+let lastWarningState = null;
+let urgentSelectedOption = null;    // 'A' | 'B' | null
+let standardAdjustedConfirmed = false; // true = user agreed to use adjusted time in note
 
 // Infusion duration mapping (in hours)
 const INFUSION_DURATION = {
@@ -53,8 +59,15 @@ const FREQUENCY_NAMES = {
 
 function clearTDMInputs() {
   document.getElementById('tdmForm').reset();
-  const method = document.querySelector('input[name="samplingMethod"]:checked');
-  if (method) method.checked = true; // Keep trough selected
+  
+  // Reset sampling method badge
+  document.getElementById('samplingMethod').value = '';
+  document.getElementById('badge-trough').className = 'method-badge';
+  document.getElementById('badge-auc').className = 'method-badge';
+  ['trough', 'auc'].forEach(m => {
+    const p = document.getElementById('info-panel-' + m);
+    if (p) p.classList.remove('visible', 'pinned');
+  });
   
   document.getElementById('timeRoundingNote').style.display = 'none';
   document.getElementById('frequencyNote').style.display = 'none';
@@ -64,11 +77,11 @@ function clearTDMInputs() {
   adjustedTroughDateTime = null;
   adjustedPostdoseDateTime = null;
   adjustedTimeLabel = '';
-  const toggleContainer = document.getElementById('noteTimeToggleContainer');
-  if (toggleContainer) toggleContainer.style.display = 'none';
-  const originalRadio = document.getElementById('noteTime-original');
-  if (originalRadio) originalRadio.checked = true;
-  
+  isUrgentCase = false;
+  lastWarningState = null;
+  urgentSelectedOption = null;
+  standardAdjustedConfirmed = false;
+
   hasScrolledTDM = false;
 }
 
@@ -158,8 +171,7 @@ function findNearestStandardTime(inputHour, inputMinute, frequency) {
 // =============================================================
 
 function calculateTDM() {
-  // Get inputs
-  const samplingMethod = document.querySelector('input[name="samplingMethod"]:checked')?.value;
+  const samplingMethod = document.getElementById('samplingMethod').value;
   
   const ldDate = document.getElementById('ld_date').value;
   const ldHour = document.getElementById('ld_hour').value;
@@ -175,10 +187,9 @@ function calculateTDM() {
   const frequency = document.getElementById('frequency').value;
   
   const outputDiv = document.getElementById('tdmOutput');
-  const aucSection = document.getElementById('aucSection');
   
   // Validation
-  const inputsComplete = mdDate && mdHour !== '' && mdMinute !== '' && mdAmPm !== '' && dose && frequency;
+  const inputsComplete = mdDate && mdHour !== '' && mdMinute !== '' && mdAmPm !== '' && dose && frequency && samplingMethod;
   
   if (!inputsComplete) {
     outputDiv.style.display = 'none';
@@ -191,11 +202,17 @@ function calculateTDM() {
   // Show output
   outputDiv.style.display = 'block';
   
-  // Show/hide AUC section
+  // Toggle merged sampling card style + show/hide post-dose section
+  const aucPostSection = document.getElementById('aucPostSection');
+  const samplingCard = document.getElementById('samplingCard');
   if (samplingMethod === 'auc') {
-    aucSection.style.display = 'block';
+    aucPostSection.style.display = 'block';
+    samplingCard.style.backgroundColor = '#F0F4FF';
+    samplingCard.style.borderLeftColor = '#5C6BC0';
   } else {
-    aucSection.style.display = 'none';
+    aucPostSection.style.display = 'none';
+    samplingCard.style.backgroundColor = '#E8F5E9';
+    samplingCard.style.borderLeftColor = '#4CAF50';
   }
   
   // Auto-scroll on first calculation
@@ -244,10 +261,10 @@ function calculateTDM() {
   adjustedTroughDateTime = null;
   adjustedPostdoseDateTime = null;
   adjustedTimeLabel = '';
-  const toggleContainer = document.getElementById('noteTimeToggleContainer');
-  if (toggleContainer) toggleContainer.style.display = 'none';
-  const originalRadio = document.getElementById('noteTime-original');
-  if (originalRadio) originalRadio.checked = true;
+  isUrgentCase = false;
+  lastWarningState = null;
+  urgentSelectedOption = null;
+  standardAdjustedConfirmed = false;
 
   // Check for after-hours and weekend warnings
   const shouldShowWeekend = isWeekend(troughDateTime) || (samplingMethod === 'auc' && isWeekend(calculatePostdoseTime(troughDateTime, infusionDuration)));
@@ -389,33 +406,28 @@ function displayTimeRoundingNote(inputHour12, inputMinute, inputAmPm, frequency)
 
 function displaySummary(ldDate, ldHour, ldMinute, ldAmPm, mdDate, mdHour, mdMinute, mdAmPm, dose, frequency, samplingMethod) {
   const summaryDiv = document.getElementById('summaryOutput');
+  const ldDose = document.getElementById('ld_dose').value;
   
-  let html = '<ul>';
+  let html = '';
   
-  // Loading dose (if provided)
-  if (ldDate && ldHour !== '' && ldMinute !== '' && ldAmPm !== '') {
+  if (ldDose && ldDate && ldHour !== '' && ldMinute !== '' && ldAmPm !== '') {
     const ldHour24 = convertTo24Hour(parseInt(ldHour), ldAmPm);
     const ldDateTime = new Date(ldDate);
     ldDateTime.setHours(ldHour24, parseInt(ldMinute), 0, 0);
     const ldFormatted = formatDateTime(ldDateTime);
-    html += `<li><strong>Loading Dose:</strong> ${ldFormatted.full}</li>`;
+    html += `<p style="margin: 0 0 3px 0; font-size: 0.88rem;"><strong>Loading Dose:</strong> ${ldDose} mg given on ${ldFormatted.full}</p>`;
   }
   
-  // First maintenance dose
+  // Maintenance dose
   const mdHour24 = convertTo24Hour(parseInt(mdHour), mdAmPm);
   const mdDateTime = new Date(mdDate);
   mdDateTime.setHours(mdHour24, parseInt(mdMinute), 0, 0);
   const mdFormatted = formatDateTime(mdDateTime);
-  html += `<li><strong>First Maintenance Dose:</strong> ${mdFormatted.full}</li>`;
-  
-  // Regimen
-  html += `<li><strong>Vancomycin Regimen:</strong> ${dose} mg ${frequency}</li>`;
+  html += `<p style="margin: 0 0 3px 0; font-size: 0.88rem;"><strong>Maintenance Dose:</strong> ${dose} mg ${frequency}, first given on ${mdFormatted.full}</p>`;
   
   // Sampling method
   const methodText = samplingMethod === 'auc' ? 'AUC Sampling (Pre-dose + Post-dose)' : 'Trough Sampling (Pre-dose only)';
-  html += `<li><strong>Sampling Method:</strong> ${methodText}</li>`;
-  
-  html += '</ul>';
+  html += `<p style="margin: 0; font-size: 0.88rem;"><strong>Sampling Method:</strong> ${methodText}</p>`;
   
   summaryDiv.innerHTML = html;
 }
@@ -427,12 +439,8 @@ function displayTroughSampling(troughDateTime, samplingDoseNum) {
   const ordinal = samplingDoseNum === 2 ? '2nd' : (samplingDoseNum === 3 ? '3rd' : '4th');
   
   troughDiv.innerHTML = `
-    <p style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #2E7D32;">
-      ${formatted.full}
-    </p>
-    <p style="margin: 10px 0 0 0; font-size: 0.95rem; color: #666;">
-      (30 minutes before the ${ordinal} maintenance dose)
-    </p>
+    <p style="margin: 0; font-size: 1rem; font-weight: 700; color: #2E7D32;">${formatted.full}</p>
+    <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #666;">(30 minutes before the ${ordinal} maintenance dose)</p>
   `;
 }
 
@@ -448,29 +456,196 @@ function displayPostdoseSampling(postdoseDateTime, samplingDoseNum, troughDateTi
   const ordinal = samplingDoseNum === 2 ? '2nd' : (samplingDoseNum === 3 ? '3rd' : '4th');
   
   postdoseDiv.innerHTML = `
-    <p style="margin: 0 0 15px 0; font-size: 0.9rem; font-style: italic; color: #555;">
-      Assuming dose is given on ${doseFormatted.full} and infused over ${infusionDuration} hour${infusionDuration !== 1 ? 's' : ''}:
-    </p>
-    <p style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #1565C0;">
-      ${formatted.full}
-    </p>
-    <p style="margin: 10px 0 0 0; font-size: 0.95rem; color: #666;">
-      (1 hour after completion of the ${ordinal} maintenance dose infusion)
-    </p>
+    <p style="margin: 0 0 4px 0; font-size: 0.82rem; font-style: italic; color: #555;">Assuming dose given on ${doseFormatted.full}, infused over ${infusionDuration} hour${infusionDuration !== 1 ? 's' : ''}:</p>
+    <p style="margin: 0; font-size: 1rem; font-weight: 700; color: #1565C0;">${formatted.full}</p>
+    <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #666;">(1 hour after completion of the ${ordinal} maintenance dose infusion)</p>
   `;
 }
 
 function displayAfterHoursWarning(troughDateTime, isAUC, infusionDuration) {
-  const warningDiv = document.getElementById('afterHoursWarning');
-  
-  // Calculate postponed times to next morning at 5:30 AM (30 min before 6 AM)
-  const nextMorning = new Date(troughDateTime);
-  nextMorning.setDate(nextMorning.getDate() + 1);
-  nextMorning.setHours(5, 30, 0, 0);
-  
-  // Store adjusted times globally for the note toggle
+  lastWarningState = { kind: 'afterHours', troughDateTime: new Date(troughDateTime), isAUC, infusionDuration };
+  renderWarningCard();
+}
+
+function displayWeekendWarning(troughDateTime, isAUC, infusionDuration) {
+  lastWarningState = { kind: 'weekend', troughDateTime: new Date(troughDateTime), isAUC, infusionDuration };
+  renderWarningCard();
+}
+
+// =============================================================
+// Note Time Toggle Helpers
+// =============================================================
+
+function showNoteTimeToggle(type, isUrgent) {
+  // Note time toggle removed — selection is handled in-card
+}
+
+// =============================================================
+// Urgency Logic
+// =============================================================
+
+function setUrgency(urgent) {
+  isUrgentCase = urgent;
+  renderWarningCard();
+}
+
+// Returns next morning at 5:30am.
+// If trough is 12:01am–5am, use same calendar day (just ~hours later).
+// Otherwise (≥17:00), use next calendar day.
+function getUrgentNextMorning(troughDateTime) {
+  const h = troughDateTime.getHours();
+  const result = new Date(troughDateTime);
+  if (h < 5) {
+    result.setHours(5, 30, 0, 0);
+  } else {
+    result.setDate(result.getDate() + 1);
+    result.setHours(5, 30, 0, 0);
+  }
+  return result;
+}
+
+function getWarningScenario(kind, dt) {
+  const day = dt.getDay(); // 0=Sun, 1–4=Mon–Thu, 5=Fri, 6=Sat
+  const h   = dt.getHours();
+  if (kind === 'afterHours') {
+    return h < 5 ? 'weekday-early-morning' : 'weekday-aoh';
+  }
+  // weekend kind
+  if ((day === 6 || day === 0) && h < 17) return 'weekend-daytime';
+  if (day === 5 && h >= 17) return 'fri-evening';
+  if (day === 6 && h >= 17) return 'sat-evening';
+  return 'sun-evening'; // day === 0 && h >= 17
+}
+
+function renderWarningCard() {
+  if (!lastWarningState) return;
+  const { kind, troughDateTime, isAUC, infusionDuration } = lastWarningState;
+  const scenario = getWarningScenario(kind, troughDateTime);
+
+  const isWknd     = kind === 'weekend';
+  const divId      = isWknd ? 'weekendWarning' : 'afterHoursWarning';
+  const icon       = isWknd ? '📅' : '🕐';
+  const title      = isWknd ? 'WEEKEND CONSIDERATION' : 'AFTER-HOURS CONSIDERATION';
+  const titleColor = isWknd ? '#C62828' : '#E65100';
+  const cardStyle  = isWknd
+    ? 'background:#FFEBEE; border:3px solid #C62828; border-radius:8px; box-shadow:0 4px 8px rgba(198,40,40,0.2);'
+    : 'background:#FFF3E0; border-left:4px solid #FF6F00; border-radius:8px;';
+
+  const cardPadding = isWknd ? 'padding:12px 16px 12px;' : 'padding:14px 18px 12px;';
+
+  const toggleHTML = `
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <button onclick="setUrgency(false)" style="flex:1; padding:8px 12px; border-radius:8px; border:2px solid ${!isUrgentCase ? '#E65100' : '#DDD'}; background:${!isUrgentCase ? '#FFF3E0' : '#F5F5F5'}; color:${!isUrgentCase ? '#BF360C' : '#999'}; font-weight:700; cursor:pointer; font-size:0.82rem; font-family:inherit;">Standard</button>
+      <button onclick="setUrgency(true)"  style="flex:1; padding:8px 12px; border-radius:8px; border:2px solid ${ isUrgentCase ? '#C62828' : '#DDD'}; background:${ isUrgentCase ? '#FFEBEE' : '#F5F5F5'}; color:${ isUrgentCase ? '#C62828' : '#999'}; font-weight:700; cursor:pointer; font-size:0.82rem; font-family:inherit;">⚠️ Urgent</button>
+    </div>`;
+
+  const contentHTML = isUrgentCase
+    ? buildUrgentWarningContent(scenario, troughDateTime, isAUC, infusionDuration)
+    : buildNonUrgentWarningContent(kind, troughDateTime, isAUC, infusionDuration);
+
+  document.getElementById(divId).innerHTML = `
+    <div style="${cardStyle} ${cardPadding} margin:12px 0;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <span style="font-size:1.5rem;">${icon}</span>
+        <strong style="font-size:1.05rem; color:${titleColor};">${title}</strong>
+      </div>
+      ${toggleHTML}
+      ${contentHTML}
+    </div>`;
+  document.getElementById(divId).style.display = 'block';
+}
+
+// Shared white box helper for a sampling time entry
+function buildTimeBox(label, labelColor, formattedDT, subtext, bold) {
+  return `
+    <div style="margin-bottom:8px;">
+      <p style="margin:0 0 2px 0; font-size:0.82rem; font-weight:600; color:${labelColor};">${label}:</p>
+      <p style="margin:0 0 2px 0; padding-left:14px; color:#333; ${bold ? 'font-weight:600;' : ''}">${formattedDT.full}</p>
+      <p style="margin:0; padding-left:14px; font-size:0.8rem; color:#777;">${subtext}</p>
+    </div>`;
+}
+
+function buildNonUrgentWarningContent(kind, troughDateTime, isAUC, infusionDuration) {
+  // Always next calendar day for AOH; next working day for weekend
+  let adjusted;
+  if (kind === 'weekend') {
+    adjusted = getNextWorkingDay(troughDateTime);
+    adjusted.setHours(5, 30, 0, 0);
+  } else {
+    adjusted = new Date(troughDateTime);
+    adjusted.setDate(adjusted.getDate() + 1);
+    adjusted.setHours(5, 30, 0, 0);
+  }
+
+  // Update global adjusted state
+  adjustedTroughDateTime = new Date(adjusted);
+  if (isAUC) {
+    const adj = new Date(adjusted);
+    adj.setMinutes(adj.getMinutes() + 30);
+    adj.setHours(adj.getHours() + infusionDuration + 1);
+    adjustedPostdoseDateTime = adj;
+  } else {
+    adjustedPostdoseDateTime = null;
+  }
+
+  const troughFmt = formatDateTime(adjusted);
+  const intro = kind === 'weekend'
+    ? 'The calculated sampling time falls on a weekend. For non-urgent cases, consider postponing to the next working day. Choose the <strong>Urgent</strong> tab above if this is an urgent case (e.g. suspected toxicity).'
+    : 'The calculated sampling time falls after office hours (5:00 PM – 4:00 AM). For non-urgent cases, consider taking the sample the following morning. Choose the <strong>Urgent</strong> tab above if this is an urgent case (e.g. suspected toxicity).';
+
+  let html = `<p style="margin:0 0 12px 0; line-height:1.55; font-size:0.82rem; color:#B71C1C;">${intro}</p>`;
+  html += `<div style="background:white; padding:12px; border-radius:6px; margin-bottom:12px;">`;
+  html += buildTimeBox('Pre-dose (Trough)', '#2E7D32', troughFmt, '(30 minutes before 6:00 AM dose)', true);
+  if (isAUC) {
+    const postdose = new Date(adjusted);
+    postdose.setMinutes(postdose.getMinutes() + 30);
+    postdose.setHours(postdose.getHours() + infusionDuration + 1);
+    html += buildTimeBox('Post-dose (Peak)', '#1565C0', formatDateTime(postdose), '(1 hour after infusion completion)', true);
+  }
+  html += `</div>`;
+
+  // Confirmation button
+  if (standardAdjustedConfirmed) {
+    html += `
+      <button onclick="confirmAdjustedTime()" style="width:100%; padding:10px 14px; border-radius:8px; border:2px solid #2E7D32; background:#E8F5E9; color:#1B5E20; font-weight:700; cursor:pointer; font-size:0.85rem; font-family:inherit; margin-bottom:6px;">
+        ✔ Using adjusted time in clinical note &nbsp;·&nbsp; <span style="font-weight:400; font-size:0.8rem;">Tap to revert to original</span>
+      </button>`;
+  } else {
+    html += `
+      <button onclick="confirmAdjustedTime()" style="width:100%; padding:10px 14px; border-radius:8px; border:2px solid #FF6F00; background:#FFF3E0; color:#BF360C; font-weight:700; cursor:pointer; font-size:0.85rem; font-family:inherit; margin-bottom:6px;">
+        Use this adjusted time in clinical note →
+      </button>`;
+  }
+  html += `<p style="margin:0; font-size:0.75rem; color:#999; font-style:italic;">* The clinical note template below will reflect whichever time is confirmed here.</p>`;
+
+  if (kind === 'weekend') {
+    html += `<p style="margin:8px 0 0 0; font-size:0.85rem; font-style:italic; color:#666;"><strong>Note:</strong> This calculator does not account for Malaysian public holidays. Please verify and adjust accordingly.</p>`;
+  }
+  return html;
+}
+
+function buildUrgentWarningContent(scenario, troughDateTime, isAUC, infusionDuration) {
+
+  // ── Weekend daytime: simplified card, no options ──
+  if (scenario === 'weekend-daytime') {
+    adjustedTroughDateTime = null;
+    adjustedPostdoseDateTime = null;
+
+    return `
+      <div style="background:white; padding:14px; border-radius:8px; border-left:4px solid #757575; margin-bottom:10px;">
+        <p style="margin:0 0 8px 0; line-height:1.6; color:#333;">You may proceed with the <strong>original sampling time</strong> as calculated above.</p>
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:8px; padding:10px 12px; background:#FFEBEE; border-radius:6px;">
+        <span style="font-size:1rem; flex-shrink:0;">⚠️</span>
+        <p style="margin:0; font-size:0.88rem; font-weight:700; color:#C62828;">Passover to TDM pharmacist is COMPULSORY for urgent cases.</p>
+      </div>`;
+  }
+
+  // ── All other urgent scenarios: Option A + Option B ──
+  const nextMorning = getUrgentNextMorning(troughDateTime);
+
+  // Update global adjusted state (Option B) for note toggle
   adjustedTroughDateTime = new Date(nextMorning);
-  adjustedTimeLabel = 'Next morning (after office hours adjustment)';
   if (isAUC) {
     const adj = new Date(nextMorning);
     adj.setMinutes(adj.getMinutes() + 30);
@@ -479,128 +654,103 @@ function displayAfterHoursWarning(troughDateTime, isAUC, infusionDuration) {
   } else {
     adjustedPostdoseDateTime = null;
   }
-  showNoteTimeToggle('after-hours');
+  showNoteTimeToggle('urgent', true);
 
-  const troughFormatted = formatDateTime(nextMorning);
-  
-  let html = `
-    <div class="warning-card" style="background-color: #FFF3E0; border-left: 4px solid #FF6F00; margin: 20px 0;">
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <span style="font-size: 1.5rem;">🕐</span>
-        <strong style="font-size: 1.05rem; color: #E65100;">AFTER-HOURS CONSIDERATION</strong>
-      </div>
-      <p style="margin: 0 0 15px 0; line-height: 1.6;">
-        The calculated sampling time falls after office hours (5:00 PM – 4:00 AM). 
-        Consider taking the sample the following morning:
-      </p>
-      <div style="background-color: white; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
-        <p style="margin: 0 0 5px 0;"><strong style="color: #2E7D32;">Pre-dose (Trough):</strong></p>
-        <p style="margin: 0; padding-left: 20px; color: #333;">${troughFormatted.full}</p>
-        <p style="margin: 5px 0 0 20px; font-size: 0.9rem; color: #666;">(30 minutes before 6:00 AM dose)</p>
-      </div>
-  `;
-  
-  if (isAUC) {
-    // Calculate post-dose: 6 AM + infusion duration + 1 hour
-    const postdoseMorning = new Date(nextMorning);
-    postdoseMorning.setMinutes(postdoseMorning.getMinutes() + 30); // Back to 6 AM
-    postdoseMorning.setHours(postdoseMorning.getHours() + infusionDuration + 1);
-    const postdoseFormatted = formatDateTime(postdoseMorning);
-    
-    html += `
-      <div style="background-color: white; padding: 12px; border-radius: 6px;">
-        <p style="margin: 0 0 5px 0;"><strong style="color: #1565C0;">Post-dose (Peak):</strong></p>
-        <p style="margin: 0; padding-left: 20px; color: #333;">${postdoseFormatted.full}</p>
-        <p style="margin: 5px 0 0 20px; font-size: 0.9rem; color: #666;">(1 hour after infusion completion)</p>
-      </div>
-    `;
-  }
-  
-  html += `</div>`;
-  
-  warningDiv.innerHTML = html;
-  warningDiv.style.display = 'block';
-}
+  // Preferred badge for fri/sat/sun evenings
+  const showPreferred = ['fri-evening', 'sat-evening', 'sun-evening'].includes(scenario);
+  const preferredBadge = showPreferred
+    ? `<span style="background:#2E7D32; color:white; font-size:0.7rem; padding:2px 7px; border-radius:10px; font-weight:700; margin-left:6px; vertical-align:middle;">⭐ Preferred</span>`
+    : '';
 
-function displayWeekendWarning(troughDateTime, isAUC, infusionDuration) {
-  const warningDiv = document.getElementById('weekendWarning');
-  
-  // Calculate postponed times to next working day at 5:30 AM
-  const nextWorking = getNextWorkingDay(troughDateTime);
-  nextWorking.setHours(5, 30, 0, 0);
+  const troughOrigFmt = formatDateTime(troughDateTime);
+  const troughAdjFmt  = formatDateTime(nextMorning);
 
-  // Store adjusted times globally for the note toggle
-  adjustedTroughDateTime = new Date(nextWorking);
-  adjustedTimeLabel = 'Next working day (weekend adjustment)';
-  if (isAUC) {
-    const adj = new Date(nextWorking);
-    adj.setMinutes(adj.getMinutes() + 30);
-    adj.setHours(adj.getHours() + infusionDuration + 1);
-    adjustedPostdoseDateTime = adj;
-  } else {
-    adjustedPostdoseDateTime = null;
-  }
-  showNoteTimeToggle('weekend');
+  // Post-dose times
+  const postdoseOrig = isAUC ? calculatePostdoseTime(troughDateTime, infusionDuration) : null;
+  const postdoseAdj  = isAUC ? (() => {
+    const a = new Date(nextMorning);
+    a.setMinutes(a.getMinutes() + 30);
+    a.setHours(a.getHours() + infusionDuration + 1);
+    return a;
+  })() : null;
 
-  const troughFormatted = formatDateTime(nextWorking);
-  
-  let html = `
-    <div style="background-color: #FFEBEE; border: 3px solid #C62828; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 4px 8px rgba(198, 40, 40, 0.2);">
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <span style="font-size: 1.5rem;">📅</span>
-        <strong style="font-size: 1.1rem; color: #C62828;">WEEKEND CONSIDERATION</strong>
-      </div>
-      <p style="margin: 0 0 15px 0; line-height: 1.6; color: #333;">
-        The calculated sampling time falls on a weekend. For non-urgent cases, 
-        consider postponing to the next working day:
-      </p>
-      <div style="background-color: white; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
-        <p style="margin: 0 0 5px 0;"><strong style="color: #2E7D32;">Pre-dose (Trough):</strong></p>
-        <p style="margin: 0; padding-left: 20px; color: #333; font-weight: 600;">${troughFormatted.full}</p>
-        <p style="margin: 5px 0 0 20px; font-size: 0.9rem; color: #666;">(30 minutes before 6:00 AM dose)</p>
-      </div>
-  `;
-  
-  if (isAUC) {
-    // Calculate post-dose: 6 AM + infusion duration + 1 hour
-    const postdoseWorking = new Date(nextWorking);
-    postdoseWorking.setMinutes(postdoseWorking.getMinutes() + 30); // Back to 6 AM
-    postdoseWorking.setHours(postdoseWorking.getHours() + infusionDuration + 1);
-    const postdoseFormatted = formatDateTime(postdoseWorking);
-    
-    html += `
-      <div style="background-color: white; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
-        <p style="margin: 0 0 5px 0;"><strong style="color: #1565C0;">Post-dose (Peak):</strong></p>
-        <p style="margin: 0; padding-left: 20px; color: #333; font-weight: 600;">${postdoseFormatted.full}</p>
-        <p style="margin: 5px 0 0 20px; font-size: 0.9rem; color: #666;">(1 hour after infusion completion)</p>
-      </div>
-    `;
-  }
-  
+  const doseTimeOrig = isAUC ? (() => {
+    const d = new Date(troughDateTime);
+    d.setMinutes(d.getMinutes() + 30);
+    return d;
+  })() : null;
+
+  let html = `<p style="margin:0 0 10px 0; line-height:1.55; font-size:0.82rem; color:#B71C1C;">The calculated sampling time falls outside routine hours. Two options are available for this <strong>urgent case</strong> — select the option you prefer to be reflected in the clinical note template.</p>`;
+
+  // Default to Option B on first render if nothing selected yet
+  if (!urgentSelectedOption) urgentSelectedOption = 'B';
+
+  // Prompt bar
   html += `
-      <p style="margin: 10px 0 0 0; font-size: 0.85rem; font-style: italic; color: #666;">
-        <strong>Note:</strong> This calculator does not account for Malaysian public holidays. 
-        Please verify and adjust accordingly.
-      </p>
-    </div>
-  `;
-  
-  warningDiv.innerHTML = html;
-  warningDiv.style.display = 'block';
+    <div style="display:flex; align-items:center; gap:7px; background:#FFF8E1; border:1px solid #FFD54F; border-radius:6px; padding:7px 11px; margin-bottom:10px;">
+      <span style="font-size:0.85rem;">👇</span>
+      <span style="font-size:0.78rem; font-weight:600; color:#E65100;">Select one option below — the clinical note template will update accordingly.</span>
+    </div>`;
+
+  const selA = urgentSelectedOption === 'A';
+  const selB = urgentSelectedOption === 'B';
+  const styleA = selA ? 'border-left:3px solid #1565C0; background:#F0F4FF;' : 'border-left:3px solid #DDD; background:white;';
+  const styleB = selB ? 'border-left:3px solid #2E7D32; background:#F1F8E9;' : 'border-left:3px solid #DDD; background:white;';
+  const cursorStyle = 'cursor:pointer; transition: background 0.15s, border-color 0.15s;';
+
+  // Option A — tonight
+  html += `
+    <div id="urgentOptA" onclick="selectUrgentOption('A')" style="padding:12px 14px; border-radius:8px; margin-bottom:10px; ${styleA} ${cursorStyle}">
+      <p style="margin:0 0 9px 0; font-size:0.78rem; font-weight:700; color:${selA ? '#1565C0' : '#555'}; text-transform:uppercase; letter-spacing:0.6px;">
+        ${selA ? '✔ ' : ''}Option A — Tonight (As Calculated)
+      </p>`;
+  html += buildTimeBox('Pre-dose (Trough)', '#2E7D32', troughOrigFmt, '(30 minutes before the scheduled dose)', false);
+  if (isAUC && postdoseOrig && doseTimeOrig) {
+    const doseOrigFmt = formatDateTime(doseTimeOrig);
+    html += buildTimeBox('Post-dose (Peak)', '#1565C0', formatDateTime(postdoseOrig),
+      `(1 hour after infusion completion; dose at ${doseOrigFmt.time}, infused over ${infusionDuration} hr)`, false);
+  }
+  html += `</div>`;
+
+  // Option B — next morning (preferred for fri/sat/sun)
+  html += `
+    <div id="urgentOptB" onclick="selectUrgentOption('B')" style="padding:12px 14px; border-radius:8px; margin-bottom:10px; ${styleB} ${cursorStyle}">
+      <p style="margin:0 0 9px 0; font-size:0.78rem; font-weight:700; color:${selB ? '#2E7D32' : '#555'}; text-transform:uppercase; letter-spacing:0.6px;">
+        ${selB ? '✔ ' : ''}Option B — Next Morning ${preferredBadge}
+      </p>`;
+  html += buildTimeBox('Pre-dose (Trough)', '#2E7D32', troughAdjFmt, '(30 minutes before 6:00 AM dose)', true);
+  if (isAUC && postdoseAdj) {
+    html += buildTimeBox('Post-dose (Peak)', '#1565C0', formatDateTime(postdoseAdj),
+      `(1 hour after infusion completion; dose at 6:00 AM, infused over ${infusionDuration} hr)`, true);
+  }
+  html += `</div>`;
+
+  // Passover requirement
+  html += `
+    <div style="display:flex; align-items:flex-start; gap:8px; padding:10px 12px; background:#FFEBEE; border-radius:6px;">
+      <span style="font-size:1rem; flex-shrink:0;">⚠️</span>
+      <p style="margin:0; font-size:0.88rem; font-weight:700; color:#C62828;">Passover to TDM pharmacist is COMPULSORY for urgent cases.</p>
+    </div>`;
+
+  return html;
 }
 
-// =============================================================
-// Note Time Toggle Helpers
-// =============================================================
+// Called when user clicks Option A or B in the urgent warning card
+function selectUrgentOption(option) {
+  urgentSelectedOption = option;
 
-function showNoteTimeToggle(type) {
-  const container = document.getElementById('noteTimeToggleContainer');
-  const label = document.getElementById('noteTimeToggleLabel');
-  if (!container) return;
-  container.style.display = 'block';
-  if (label) {
-    label.textContent = 'Adjusted time = Adjusted after office hour / weekend sampling to the next working day';
-  }
+  // Re-render the warning card so selection state updates visually
+  renderWarningCard();
+
+  // Regenerate the clinical note to reflect the chosen option
+  refreshClinicalNoteFromToggle();
+}
+
+// Called when user clicks the "I agree" / "Use original time" button in standard warning card
+function confirmAdjustedTime() {
+  standardAdjustedConfirmed = !standardAdjustedConfirmed;
+  renderWarningCard();
+  refreshClinicalNoteFromToggle();
 }
 
 // Called when the user clicks Original / Adjusted toggle
@@ -616,10 +766,9 @@ function refreshClinicalNoteFromToggle() {
   const mdAmPm   = document.getElementById('md_ampm').value;
   const dose     = document.getElementById('dose').value;
   const frequency = document.getElementById('frequency').value;
-  const samplingMethod = document.querySelector('input[name="samplingMethod"]:checked')?.value;
+  const samplingMethod = document.getElementById('samplingMethod').value;
 
-  if (!mdDate || !mdHour || !mdMinute || !mdAmPm || !dose || !frequency) return;
-
+  if (!mdDate || !mdHour || !mdMinute || !mdAmPm || !dose || !frequency || !samplingMethod) return;
   const mdHour24 = convertTo24Hour(parseInt(mdHour), mdAmPm);
   const firstMDDateTime = new Date(mdDate);
   firstMDDateTime.setHours(mdHour24, parseInt(mdMinute), 0, 0);
@@ -632,13 +781,24 @@ function refreshClinicalNoteFromToggle() {
 }
 
 // =============================================================
+// Effective time helper — respects urgent option selection
+// =============================================================
+
+function getEffectiveUseAdjusted() {
+  if (isUrgentCase && lastWarningState) {
+    return urgentSelectedOption === 'B' && adjustedTroughDateTime !== null;
+  }
+  return standardAdjustedConfirmed && adjustedTroughDateTime !== null;
+}
+
+// =============================================================
 // Clinical Note Generation
 // =============================================================
 
 function generateClinicalNote(ldDate, ldHour, ldMinute, ldAmPm, mdDate, mdHour, mdMinute, mdAmPm, dose, frequency, samplingMethod, troughDateTime, samplingDoseNum, infusionDuration) {
   
   // Determine whether to use original or adjusted times
-  const useAdjusted = document.getElementById('noteTime-adjusted')?.checked && adjustedTroughDateTime !== null;
+  const useAdjusted = getEffectiveUseAdjusted();
   const effectiveTrough  = useAdjusted ? adjustedTroughDateTime : troughDateTime;
   const effectivePostdose = useAdjusted
     ? adjustedPostdoseDateTime
@@ -646,21 +806,21 @@ function generateClinicalNote(ldDate, ldHour, ldMinute, ldAmPm, mdDate, mdHour, 
 
   // Patient Summary — plain dash style
   let summaryHTML = '';
+  const ldDose = document.getElementById('ld_dose').value;
   
-  if (ldDate && ldHour !== '' && ldMinute !== '' && ldAmPm !== '') {
+  if (ldDose && ldDate && ldHour !== '' && ldMinute !== '' && ldAmPm !== '') {
     const ldHour24 = convertTo24Hour(parseInt(ldHour), ldAmPm);
     const ldDateTime = new Date(ldDate);
     ldDateTime.setHours(ldHour24, parseInt(ldMinute), 0, 0);
     const ldFormatted = formatDateTime(ldDateTime);
-    summaryHTML += `<p style="margin: 0 0 3px 0;">- <strong>Loading Dose:</strong> ${ldFormatted.full}</p>`;
+    summaryHTML += `<p style="margin: 0 0 3px 0;">- <strong>LD:</strong> ${ldDose} mg given on ${ldFormatted.full}</p>`;
   }
   
   const mdHour24 = convertTo24Hour(parseInt(mdHour), mdAmPm);
   const mdDateTime = new Date(mdDate);
   mdDateTime.setHours(mdHour24, parseInt(mdMinute), 0, 0);
   const mdFormatted = formatDateTime(mdDateTime);
-  summaryHTML += `<p style="margin: 0 0 3px 0;">- <strong>First Maintenance Dose:</strong> ${mdFormatted.full}</p>`;
-  summaryHTML += `<p style="margin: 0 0 3px 0;">- <strong>Vancomycin Regimen:</strong> ${dose} mg ${frequency}</p>`;
+  summaryHTML += `<p style="margin: 0 0 3px 0;">- <strong>MD:</strong> ${dose} mg ${frequency}, first given on ${mdFormatted.full}</p>`;
   
   const methodText = samplingMethod === 'auc' ? 'AUC Sampling (Pre-dose + Post-dose)' : 'Trough Sampling (Pre-dose only)';
   summaryHTML += `<p style="margin: 0 0 3px 0;">- <strong>Sampling Method:</strong> ${methodText}</p>`;
@@ -698,6 +858,11 @@ function generateClinicalNote(ldDate, ldHour, ldMinute, ldAmPm, mdDate, mdHour, 
     }
   }
 
+  // Urgent note line — appended when case is urgent and a warning was triggered
+  if (isUrgentCase && lastWarningState) {
+    tdmHTML += `<p style="margin: 10px 0 0 0;">- <strong>Note:</strong> Recommended TDM sampling given outside of routine hours / on weekend as this case was deemed urgent by the prescriber.</p>`;
+  }
+
   document.getElementById('noteTDMInstructions').innerHTML = tdmHTML;
 }
 
@@ -718,7 +883,7 @@ function copyClinicalNote() {
   const htmlToCopy = tempDiv.innerHTML;
   
   // Plain text version — built directly (don't scrape innerHTML for TDM section)
-  const useAdjusted = document.getElementById('noteTime-adjusted')?.checked && adjustedTroughDateTime !== null;
+  const useAdjusted = getEffectiveUseAdjusted();
   const summaryDiv = document.getElementById('notePatientSummary');
   const summaryText = summaryDiv ? summaryDiv.innerText.trim() : '';
 
@@ -733,7 +898,7 @@ function copyClinicalNote() {
   // Rebuild TDM text cleanly
   const dose      = document.getElementById('dose').value;
   const frequency = document.getElementById('frequency').value;
-  const samplingMethod = document.querySelector('input[name="samplingMethod"]:checked')?.value;
+  const samplingMethod = document.getElementById('samplingMethod').value;
   const mdDate   = document.getElementById('md_date').value;
   const mdHour   = document.getElementById('md_hour').value;
   const mdMinute = document.getElementById('md_minute').value;
@@ -778,6 +943,10 @@ function copyClinicalNote() {
       textToCopy += `  ${postFmt.full}\n`;
       textToCopy += `  (1 hour after infusion completion; assuming dose given at ${doseFmt.time}, infused over ${infusionDuration} hour${infusionDuration !== 1 ? 's' : ''})\n`;
     }
+  }
+
+  if (isUrgentCase && lastWarningState) {
+    textToCopy += `- Note: Recommended TDM sampling given outside of routine hours / on weekend as this case was deemed urgent by the prescriber.\n`;
   }
 
   textToCopy += '----------------------------------------\n';
