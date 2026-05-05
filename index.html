@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VDOSE — Vancomycin Dosing &amp; Optimisation Support Engine | HSgB</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="assets/images/HSgB-ABX-SOS-Logo.png">
+  <link rel="shortcut icon" type="image/png" href="assets/images/HSgB-ABX-SOS-Logo.png">
+  <!-- VDOSE component styles (cards, forms, warnings, clinical note, etc.) -->
+  <link rel="stylesheet" href="assets/css/vdose.css">
+
+  <style>
+    /* ═══════════════════════════════════════════════
+       VDOSE TABBED LAYOUT
+       Mirrors PharmaTrace structure with VDOSE colours
+    ═══════════════════════════════════════════════ */
+
+    /* ── Override: body background ── */
+    body { background: #f5f5f5; }
+
+    /* ── Override: header — maroon gradient, PharmaTrace structure ── */
+    .header {
+      background: linear-gradient(135deg, #800000 0%, #510400 100%) !important;
+      padding: 18px 25px !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 12px !important;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.18) !important;
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 100 !important;
+      cursor: pointer !important;
+      justify-content: flex-start !important;
+    }
+    .logo-container { display: flex; gap: 8px; flex-shrink: 0; }
+    .logo-container img { height: 50px; background: #fff; padding: 4px; border-radius: 6px; }
+    .header-text h1 { font-size: 1.5em; font-weight: 600; color: #fff; line-height: 1.2; margin: 0; }
+    .header-text p  { font-size: 0.82em; color: rgba(255,255,255,0.88); margin: 2px 0 0; }
+
+    /* ── TAB BAR ── */
+    .tab-bar {
+      background: #fff;
+      border-bottom: 2px solid #E8D8D8;
+      display: flex;
+      padding: 0 24px;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      position: sticky;
+      top: 86px;
+      z-index: 99;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 0 28px;
+      height: 56px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.95em;
+      font-weight: 700;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #aaa;
+      border-bottom: 4px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+      letter-spacing: 0.2px;
+    }
+    .tab-btn:hover { color: #666; background: #fdf4f4; border-radius: 8px 8px 0 0; }
+    .tab-icon { font-size: 1.1em; }
+    .tab-label-wrap { display: flex; flex-direction: column; align-items: flex-start; }
+    .tab-label-main { font-size: 0.95em; font-weight: 700; line-height: 1.2; }
+    .tab-label-sub  { font-size: 0.68em; font-weight: 500; opacity: 0.8; line-height: 1.2; }
+    .tab-btn.active { color: #800000; border-bottom-color: #800000; background: #FEF0F0; border-radius: 8px 8px 0 0; }
+    .tab-content        { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── BACK LINK ── */
+    .tab-bar-spacer { flex: 1; }
+    .tab-btn-back {
+      padding: 0 20px;
+      height: 56px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85em;
+      font-weight: 700;
+      background: none;
+      border: none;
+      border-left: 1.5px solid #E8D8D8;
+      cursor: pointer;
+      color: #800000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      letter-spacing: 0.2px;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+      flex-shrink: 0;
+    }
+    .tab-btn-back:hover { background: #FEF0F0; color: #510400; }
+
+    /* ── OUTER WRAP (white card per tab) ── */
+    .outer-wrap {
+      background: #fff;
+      max-width: 900px;
+      margin: 20px auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    /* Override style.css .container inside outer-wrap */
+    .outer-wrap > .container {
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 16px 32px 36px !important;
+    }
+
+    /* ── Title + CLEAR row ── */
+    .title-clear-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .title-clear-row h1 { margin: 0; }
+
+    /* ── DISCLAIMER / FOOTER ── */
+    .disclaimer-section {
+      max-width: 900px;
+      margin: 0 auto 36px;
+      padding: 20px 28px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.82em;
+      color: #546E7A;
+      line-height: 1.65;
+      border-top: 1px solid #ECDDDD;
+    }
+    .disclaimer-section p { margin: 0 0 5px; }
+    .disclaimer-section a { color: #800000; }
+    .disclaimer-section .less-bold   { font-weight: 600; color: #37474F; }
+    .disclaimer-section .stronger-bold { font-weight: 700; color: #263238; }
+    .disclaimer-section .footnote    { font-size: 0.9em; color: #78909C; font-style: italic; }
+    .disclaimer-credits { display: flex; flex-direction: column; gap: 5px; margin-bottom: 4px; }
+    .disclaimer-credits-row { display: flex; align-items: baseline; gap: 8px; }
+    .disclaimer-credits-label {
+        font-size: 0.9em;
+        font-weight: 700;
+        color: #800000;
+        white-space: nowrap;
+        min-width: 130px;
+        flex-shrink: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+    .disclaimer-credits-value { font-size: 0.9em; color: #444; line-height: 1.55; text-align: justify; }
+    .disclaimer-divider { border: none; border-top: 1px solid #c9a0a0; margin: 10px 0; }
+
+    /* ════════════════════════════════════════
+       DISCLAIMER GATE PAGE
+    ════════════════════════════════════════ */
+    #disclaimer-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(160deg, #f9f2f2 0%, #f0e6e6 100%);
+    }
+    .disc-header {
+      background: linear-gradient(135deg, #800000 0%, #510400 100%);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.22);
+    }
+    .disc-header img {
+      height: 42px;
+      background: #fff;
+      padding: 4px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .disc-header h1 {
+      margin: 0;
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.2;
+    }
+    .disc-header p {
+      margin: 2px 0 0;
+      font-size: 0.8em;
+      color: rgba(255,255,255,0.85);
+    }
+    .disc-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 20px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .disc-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 6px 24px rgba(128,0,0,0.13);
+      width: 100%;
+      max-width: 860px;
+      overflow: hidden;
+    }
+    .disc-card-head {
+      background: linear-gradient(135deg, #800000 0%, #924444 100%);
+      padding: 14px 26px 12px;
+    }
+    .disc-card-head h2 {
+      margin: 0 0 2px;
+      font-size: 1.1em;
+      font-weight: 700;
+      color: #fff;
+      border: none;
+      padding: 0;
+    }
+    .disc-card-head p {
+      margin: 0;
+      font-size: 0.78em;
+      color: rgba(255,255,255,0.82);
+      font-style: italic;
+    }
+    .disc-card-body {
+      padding: 18px 26px 20px;
+    }
+    .disc-intro {
+      font-size: 0.88em;
+      color: #37474F;
+      line-height: 1.55;
+      margin: 0 0 14px;
+    }
+    .disc-box-red {
+      background: #fdf0f0;
+      border-left: 4px solid #800000;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-size: 0.84em;
+      color: #510400;
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+    .disc-cols {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 10px;
+      margin-bottom: 12px;
+      align-items: stretch;
+    }
+    .disc-obligations-label {
+      font-size: 0.78em;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: #800000;
+      margin: 0 0 2px;
+    }
+    .disc-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .disc-list li {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-size: 0.83em;
+      color: #37474F;
+      line-height: 1.45;
+      background: #F9FAFB;
+      border: 1px solid #E8D5D5;
+      border-radius: 6px;
+      padding: 7px 11px;
+    }
+    .disc-list li::before {
+      content: "✔";
+      color: #800000;
+      font-size: 0.82em;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .disc-caution {
+      background: #FFF8E1;
+      border-left: 4px solid #FFB300;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 0.83em;
+      color: #5D4037;
+      line-height: 1.55;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .disc-bottom-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .disc-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg, #b71c1c 0%, #d32f2f 100%);
+      color: #fff;
+      font-size: 0.78em;
+      font-weight: 700;
+      padding: 5px 13px;
+      border-radius: 20px;
+      letter-spacing: 0.4px;
+      box-shadow: 0 2px 6px rgba(183,28,28,0.35);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .disc-badge::before { content: "⚠ "; }
+    .disc-liability {
+      font-size: 0.8em;
+      color: #757575;
+      line-height: 1.45;
+      font-style: italic;
+    }
+    .disc-divider {
+      border: none;
+      border-top: 1px solid #E8D5D5;
+      margin: 14px 0;
+    }
+    .disc-agree-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .disc-agree-row input[type="checkbox"] {
+      width: 18px !important;
+      height: 18px !important;
+      min-width: 18px !important;
+      margin-top: 2px !important;
+      accent-color: #800000;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .disc-agree-label {
+      font-size: 0.88em;
+      color: #263238;
+      font-weight: 500;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+    /* PIN entry */
+    .disc-pin-section { margin-bottom: 12px; }
+    .disc-pin-label {
+      font-size: 0.78em;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: #800000;
+      margin: 0 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .disc-pin-digits {
+      display: flex;
+      gap: 10px;
+      flex-wrap: nowrap;
+    }
+    .disc-pin-digit {
+      width: 52px !important;
+      min-width: 52px !important;
+      max-width: 52px !important;
+      height: 56px !important;
+      flex: 0 0 52px !important;
+      box-sizing: border-box !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: 2px solid #D0B0B0 !important;
+      border-radius: 8px !important;
+      font-size: 1.4em !important;
+      font-weight: 700 !important;
+      text-align: center !important;
+      font-family: 'Poppins', sans-serif !important;
+      color: #800000 !important;
+      background: #FFF8F8 !important;
+      outline: none !important;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      caret-color: #800000;
+    }
+    .disc-pin-digit:focus {
+      border-color: #800000 !important;
+      box-shadow: 0 0 0 3px rgba(128,0,0,0.13) !important;
+      background: #fff !important;
+    }
+    .disc-pin-digit.pin-error {
+      border-color: #e53935 !important;
+      background: #FFF0F0 !important;
+      box-shadow: 0 0 0 3px rgba(229,57,53,0.13) !important;
+      animation: pinShake 0.35s ease;
+    }
+    @keyframes pinShake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-5px); }
+      60%      { transform: translateX(5px); }
+    }
+    .disc-pin-error-msg {
+      display: none;
+      margin-top: 8px;
+      font-size: 0.8em;
+      font-weight: 600;
+      color: #c62828;
+    }
+    .disc-pin-error-msg.visible { display: block; }
+    /* Proceed button */
+    .disc-proceed-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #800000 0%, #924444 100%);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.95em;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: not-allowed;
+      opacity: 0.42;
+      transition: opacity 0.25s, transform 0.2s, box-shadow 0.2s;
+    }
+    .disc-proceed-btn.active { cursor: pointer; opacity: 1; }
+    .disc-proceed-btn.active:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(128,0,0,0.32);
+    }
+    .disc-proceed-btn.active:active { transform: translateY(0); }
+    /* Mobile */
+    @media (max-width: 600px) {
+      .disc-cols { grid-template-columns: 1fr; }
+      .disc-caution { height: auto; }
+      .disc-card-body { padding: 14px 16px 16px; }
+      .disc-card-head { padding: 12px 16px 10px; }
+      .disc-header h1 { font-size: 1.05em; }
+      .disc-header img { height: 36px; }
+      .disc-body { align-items: flex-start; }
+    }
+
+    /* Main content hidden until gate passes */
+    #main-content { display: none; }
+
+    /* ── Mobile ── */
+    @media (max-width: 768px) {
+      .header { padding: 12px 15px !important; }
+      .logo-container img { height: 40px; padding: 3px; }
+      .header-text h1 { font-size: 1.1em; }
+      .header-text p  { font-size: 0.65em; }
+      .tab-bar { top: 64px; padding: 0 8px; }
+      .tab-btn { padding: 0 14px; }
+      .tab-btn-back { padding: 0 14px; }
+    }
+    @media (max-width: 640px) {
+      .logo-container img { height: 36px; }
+      .header-text h1 { font-size: 0.95em; }
+      .header-text p  { font-size: 0.6em; }
+      .tab-bar { top: 60px; }
+      .tab-btn { padding: 0 10px; font-size: 0.82em; }
+      .tab-label-sub { display: none; }
+      .tab-btn-back { padding: 0 12px; }
+      .tab-btn-back .back-label { display: none; }
+      .outer-wrap > .container { padding: 12px 16px 26px !important; }
+      .outer-wrap { margin: 10px; border-radius: 8px; }
+    }
+
+    /* ════════════════════════════════════════
+       TDM SAMPLING — inline styles
+       (moved from tdm-sampling.html <style>)
+    ════════════════════════════════════════ */
+
+    /* Sampling Method Badge Cards */
+    .method-badge-row { display: flex; gap: 10px; margin-top: 6px; }
+    .method-badge {
+      flex: 1; position: relative; cursor: pointer;
+      border: 2px solid #D0D0D0; border-radius: 10px;
+      padding: 11px 12px 10px; background: #F7F7F7;
+      transition: border-color 0.18s, background 0.18s;
+      user-select: none; -webkit-tap-highlight-color: transparent;
+    }
+    .method-badge:hover { border-color: #9E9E9E; background: #EFEFEF; }
+    .method-badge.selected-trough { border-color: #43A047; background: #E8F5E9; }
+    .method-badge.selected-auc    { border-color: #5C6BC0; background: #EEF0FF; }
+    .method-badge-title {
+      font-size: 0.92rem; font-weight: 700; letter-spacing: 0.8px;
+      color: #444; display: flex; align-items: center; gap: 6px;
+    }
+    .method-badge.selected-trough .method-badge-title { color: #2E7D32; }
+    .method-badge.selected-auc    .method-badge-title { color: #3949AB; }
+    .method-badge-check { display: none; font-size: 0.85rem; }
+    .method-badge.selected-trough .method-badge-check,
+    .method-badge.selected-auc    .method-badge-check { display: inline; }
+    .method-badge-sub { font-size: 0.76rem; color: #888; margin-top: 2px; line-height: 1.3; }
+    .method-badge.selected-trough .method-badge-sub { color: #558B2F; }
+    .method-badge.selected-auc    .method-badge-sub { color: #5C6BC0; }
+
+    /* info icon */
+    .method-info-btn {
+      position: absolute; top: 8px; right: 9px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #DDD; border: none; cursor: pointer;
+      font-size: 0.7rem; font-weight: 700; color: #555;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1; padding: 0; transition: background 0.15s; z-index: 2;
+    }
+    .method-info-btn:hover { background: #BDBDBD; }
+    .method-badge.selected-trough .method-info-btn { background: #A5D6A7; color: #2E7D32; }
+    .method-badge.selected-auc    .method-info-btn { background: #9FA8DA; color: #3949AB; }
+
+    /* Info panel */
+    .method-info-panel {
+      display: none; margin-top: 8px;
+      border-radius: 8px; padding: 10px 13px;
+      font-size: 0.8rem; line-height: 1.65;
+      border-left: 4px solid #ccc; background: #FAFAFA;
+      animation: fadeSlideIn 0.15s ease;
+    }
+    .method-info-panel.info-trough { border-left-color: #43A047; background: #F1F8E9; }
+    .method-info-panel.info-auc    { border-left-color: #5C6BC0; background: #EEF0FF; }
+    .method-info-panel.visible     { display: block; }
+    .method-info-panel strong      { display: block; margin-bottom: 4px; }
+    .method-info-panel ul { margin: 2px 0 0 0; padding-left: 18px; }
+    .method-info-panel ul li { margin-bottom: 1px; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @media (hover: hover) {
+      .method-badge:hover .method-info-panel { display: block; }
+    }
+
+    /* ── Built-in CrCl helper ── */
+    .crcl-helper-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 7px 14px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.82em;
+      font-weight: 600;
+      color: #800000;
+      background: #FEF0F0;
+      border: 1.5px solid #D9A0A0;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, color 0.18s;
+      letter-spacing: 0.2px;
+    }
+    .crcl-helper-toggle:hover,
+    .crcl-helper-toggle.active { background: #800000; color: #fff; border-color: #800000; }
+
+    .crcl-helper-inner {
+      margin-top: 10px;
+      background: #FEF8F8;
+      border: 1.5px solid #E8CECE;
+      border-radius: 10px;
+      padding: 14px 16px 12px;
+    }
+    .crcl-helper-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .crcl-helper-field {
+      flex: 1;
+      min-width: 130px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .crcl-helper-field label {
+      font-size: 0.8em;
+      font-weight: 600;
+      color: #5a2020;
+      margin: 0;
+    }
+    .crcl-helper-field input[type="number"] {
+      width: 100%;
+      height: 38px;
+      padding: 0 10px;
+      border: 1px solid #D0B0B0;
+      border-radius: 6px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88em;
+      box-sizing: border-box;
+      background: #fff;
+    }
+    .crcl-helper-field input[type="number"]:focus { border-color: #800000; outline: none; box-shadow: 0 0 0 2px rgba(128,0,0,0.12); }
+    .crcl-gender-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      height: 38px;
+    }
+    .crcl-gender-option {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.88em;
+      font-weight: 500;
+      color: #444;
+      cursor: pointer;
+      margin: 0;
+    }
+    .crcl-gender-option input[type="radio"] { accent-color: #800000; width: 15px; height: 15px; margin: 0; }
+    .crcl-helper-note {
+      font-size: 0.76em;
+      color: #9e6a6a;
+      margin: 10px 0 0;
+      font-style: italic;
+    }
+    .crcl-helper-result {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: #fff;
+      border: 1.5px solid #800000;
+      border-radius: 7px;
+      font-size: 0.85em;
+      font-weight: 600;
+      color: #800000;
+    }
+
+    /* Regimen sub-sections */
+    .regimen-subsection { margin-bottom: 14px; }
+    .regimen-subsection:last-of-type { margin-bottom: 0; }
+    .regimen-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.7px;
+      text-transform: uppercase; padding: 3px 9px; border-radius: 20px; margin-bottom: 8px;
+    }
+    .regimen-chip.optional { background: #F0F0F0; color: #777; border: 1px solid #DDD; }
+    .regimen-chip.required { background: #E3F0FF; color: #1565C0; border: 1px solid #90CAF9; }
+    .regimen-divider { border: none; border-top: 1px dashed #DDD; margin: 14px 0; }
+    .ld-mg-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .ld-mg-row input[type="number"] {
+      width: 110px; height: 40px; padding: 0 10px;
+      border: 1px solid #CCC; border-radius: 6px;
+      font-size: 0.95rem; box-sizing: border-box;
+    }
+    .ld-mg-row .mg-label { font-size: 0.9rem; color: #555; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     DISCLAIMER GATE PAGE
+══════════════════════════════════════ -->
+<div id="disclaimer-page">
+  <div class="disc-header">
+    <img src="assets/images/Logo_HSB_HQ.png" alt="HSgB Logo">
+    <div style="flex:1;">
+      <h1>VDOSE</h1>
+      <p>Vancomycin Dosing &amp; Optimisation Support Engine &nbsp;|&nbsp; Hospital Sungai Buloh</p>
+    </div>
+    <img src="assets/images/HSgB-ABX-SOS-Logo.png" alt="HSgB ABX SOS Logo">
+  </div>
+  <div class="disc-body">
+    <div class="disc-card">
+      <div class="disc-card-head">
+        <h2>📋 Disclaimer &amp; Terms of Use</h2>
+        <p>Please read carefully before proceeding</p>
+      </div>
+      <div class="disc-card-body">
+        <p class="disc-intro">
+          HSgB <strong>Vancomycin Dosing &amp; Optimisation Support Engine (VDOSE)</strong> is developed by the Pharmacy Department,
+          Hospital Sungai Buloh to support clinical staff in vancomycin dosing, therapeutic drug
+          monitoring (TDM), and generation of structured clinical note templates at the point of care.
+        </p>
+        <div class="disc-box-red">
+          VDOSE is a <strong>clinical support tool only</strong> and does <strong>not replace</strong>
+          clinical assessment &amp; professional judgement.
+        </div>
+        <p class="disc-obligations-label">Users Are Required To:</p>
+        <div class="disc-cols">
+          <ul class="disc-list">
+            <li>Independently verify all calculations before clinical use</li>
+            <li>Interpret outputs within the appropriate patient-specific context</li>
+            <li>Apply professional judgement before acting on any output</li>
+          </ul>
+          <div class="disc-caution">
+            ⚠️ As VDOSE is newly developed, minor errors may occur.
+            Always verify results before clinical use and report any discrepancies to the development team.
+          </div>
+        </div>
+        <div class="disc-bottom-row">
+          <span class="disc-badge">INTERNAL USE ONLY</span>
+          <span class="disc-liability">
+            Intended exclusively for <strong>HSgB staff</strong>. Unauthorised use or distribution is strictly prohibited.<br>
+            The developers are not responsible for any clinical decisions or outcomes arising from the use or misuse of VDOSE.
+          </span>
+        </div>
+        <hr class="disc-divider">
+        <label class="disc-agree-row" for="agree-checkbox">
+          <input type="checkbox" id="agree-checkbox" onchange="updateProceed()">
+          <span class="disc-agree-label">
+            I have read and understood the disclaimer above, and I agree to use VDOSE responsibly.
+          </span>
+        </label>
+        <div class="disc-pin-section">
+          <div class="disc-pin-label">🔐 Staff Access PIN</div>
+          <div class="disc-pin-digits">
+            <input class="disc-pin-digit" id="pin0" type="password" maxlength="1" inputmode="numeric" autocomplete="off" oninput="pinInput(0)" onkeydown="pinKeydown(event,0)">
+            <input class="disc-pin-digit" id="pin1" type="password" maxlength="1" inputmode="numeric" autocomplete="off" oninput="pinInput(1)" onkeydown="pinKeydown(event,1)">
+            <input class="disc-pin-digit" id="pin2" type="password" maxlength="1" inputmode="numeric" autocomplete="off" oninput="pinInput(2)" onkeydown="pinKeydown(event,2)">
+            <input class="disc-pin-digit" id="pin3" type="password" maxlength="1" inputmode="numeric" autocomplete="off" oninput="pinInput(3)" onkeydown="pinKeydown(event,3)">
+          </div>
+          <div class="disc-pin-error-msg" id="pinErrorMsg">❌ Incorrect PIN. Please try again.</div>
+        </div>
+        <button class="disc-proceed-btn" id="proceed-btn" disabled onclick="proceedToApp()">
+          Proceed to VDOSE &rarr;
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MAIN CONTENT (shown after gate)
+══════════════════════════════════════ -->
+<div id="main-content">
+
+<!-- ══════════════════════════════════════
+     HEADER
+══════════════════════════════════════ -->
+<div class="header" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="cursor:default" role="banner">
+  <div class="logo-container">
+    <img src="assets/images/Logo_HSB_HQ.png" alt="Hospital Sungai Buloh Logo">
+    <img src="assets/images/HSgB-ABX-SOS-Logo.png" alt="HSgB ABX SOS Logo">
+  </div>
+  <div class="header-text">
+    <h1>VDOSE</h1>
+    <p>Vancomycin Dosing &amp; Optimisation Support Engine &nbsp;|&nbsp; Hospital Sungai Buloh</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TAB BAR
+══════════════════════════════════════ -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="btn-vanco" onclick="switchTab('vanco')">
+    <span class="tab-icon">💉</span>
+    <span class="tab-label-wrap">
+      <span class="tab-label-main">Vanco Dose Calculator</span>
+      <span class="tab-label-sub">Initial Dosing &amp; Clinical Note</span>
+    </span>
+  </button>
+  <button class="tab-btn" id="btn-tdm" onclick="switchTab('tdm')">
+    <span class="tab-icon">🧪</span>
+    <span class="tab-label-wrap">
+      <span class="tab-label-main">TDM Sampling Guide</span>
+      <span class="tab-label-sub">Sampling Times &amp; Clinical Note</span>
+    </span>
+  </button>
+  <div class="tab-bar-spacer"></div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     TAB 1 — VANCOMYCIN DOSE CALCULATOR
+══════════════════════════════════════════════ -->
+<div id="tab-vanco" class="tab-content active">
+<div class="outer-wrap">
+<div class="container">
+
+  <div class="page-title-block">
+    <div class="title-clear-row">
+      <h1>Vancomycin Dose Calculator</h1>
+      <button class="nav-button clear" onclick="clearVancomycinInputs()">CLEAR</button>
+    </div>
+    <div class="tdm-disclaimer" style="padding: 8px 13px; display: flex; align-items: center; gap: 10px; margin: 6px 0 10px;">
+      <span style="font-size: 1.1rem; flex-shrink: 0;">⚠️</span>
+      <p style="margin: 0; font-size: 0.85rem; line-height: 1.4;">
+        <strong>Important!</strong> Ensure all required patient data are entered accurately before proceeding. All dose calculations are for adult patients only.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Patient Inputs</h3>
+    <form id="vancomycinForm">
+
+      <div class="form-group">
+        <label for="abw">Body Weight (BW) (kg):</label>
+        <input type="number" id="abw" step="0.1" placeholder="e.g., 70">
+        <div id="abwWarning" class="warning-card" style="display:none; margin-top: 10px; font-style: normal;">
+          <strong>⚠️ Weight entered is below the validated range for adult patients.</strong><br>
+          Please consult the Infectious Diseases (ID) or TDM Pharmacy team (Ext: 4124) for individualized dosing advice.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dialysisStatus">Dialysis Status:</label>
+        <select id="dialysisStatus">
+          <option value="">-- Please select --</option>
+          <option value="notHD">Not on Haemodialysis</option>
+          <option value="HD">ESRF on Haemodialysis (HD)</option>
+        </select>
+      </div>
+
+      <div id="crclGroup" class="form-group" style="display:none;">
+        <label for="crcl">Creatinine Clearance (CrCl) (ml/min):</label>
+        <input type="number" id="crcl" step="0.1" placeholder="e.g., 45">
+        <button type="button" class="crcl-helper-toggle" id="crclHelperToggle" onclick="toggleCrClHelper()">
+          🧮 Help me calculate CrCl
+        </button>
+        <div id="crclHelperPanel" style="display:none;">
+          <div class="crcl-helper-inner">
+            <div class="crcl-helper-row">
+              <div class="crcl-helper-field">
+                <label for="crcl_age">Age (years)</label>
+                <input type="number" id="crcl_age" step="1" min="18" placeholder="e.g., 65" oninput="calculateBuiltInCrCl()">
+              </div>
+              <div class="crcl-helper-field">
+                <label>Gender</label>
+                <div class="crcl-gender-row">
+                  <label class="crcl-gender-option">
+                    <input type="radio" name="crcl_gender" value="male" onchange="calculateBuiltInCrCl()">
+                    <span>Male</span>
+                  </label>
+                  <label class="crcl-gender-option">
+                    <input type="radio" name="crcl_gender" value="female" onchange="calculateBuiltInCrCl()">
+                    <span>Female</span>
+                  </label>
+                </div>
+              </div>
+              <div class="crcl-helper-field">
+                <label for="crcl_scr">Serum Creatinine (μmol/L)</label>
+                <input type="number" id="crcl_scr" step="1" min="1" placeholder="e.g., 85" oninput="calculateBuiltInCrCl()">
+              </div>
+            </div>
+            <p id="crclHelperNote" class="crcl-helper-note">Enter all three values above. CrCl will be auto-calculated using BW already entered.</p>
+            <div id="crclHelperResult" class="crcl-helper-result" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="timingGroup" class="form-group" style="display:none;">
+        <label for="dialysisTiming">Vancomycin-Dialysis Timing:</label>
+        <select id="dialysisTiming">
+          <option value="">-- Please select --</option>
+          <option value="beforeHD">Vancomycin started or planned to be given BEFORE dialysis</option>
+          <option value="duringHD">Vancomycin planned to be given DURING dialysis</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="indication">Indication of Vancomycin:</label>
+        <select id="indication">
+          <option value="">-- Please select --</option>
+          <option value="MRSA">MRSA Infection (Bacteraemia / Endocarditis / Pneumonia / Bone or Joint Infection / Neutropenic Fever)</option>
+          <option value="CNS">CNS Infection</option>
+          <option value="SSTI">Skin and Soft Tissue Infection (SSTI)</option>
+          <option value="UTI">Urinary Tract Infection (UTI)</option>
+          <option value="MRCONS">MRCONS Infection</option>
+          <option value="Enterococcus">Enterococcus faecium Infection</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="ivAccess">Type of IV Access Available:</label>
+        <select id="ivAccess">
+          <option value="">-- Please select --</option>
+          <option value="peripheral">Peripheral line</option>
+          <option value="central">Central line</option>
+        </select>
+        <p id="ivAccessFootnote" class="input-footnote" style="display:none;"></p>
+      </div>
+
+    </form>
+  </div><!-- /card -->
+
+  <div id="vancomycinOutput" style="display:none;">
+
+    <h3>Summary of Inputs</h3>
+    <div id="v_summaryOutput" class="card"></div>
+
+    <h3>STEP 1: Loading Dose (LD)</h3>
+    <div id="ldOutput" class="card"></div>
+    <div class="note-card">
+      💡 <strong>Notes:</strong>
+      <ul>
+        <li>Loading Dose – To be given to ALL patients regardless of renal function.</li>
+        <li>Max Vancomycin dose: 2 g/DOSE.</li>
+        <li id="ldFootnoteHD" style="display:none;">If HD occurs on the same day as the loading dose, administer a TOP-UP DOSE post-HD.</li>
+      </ul>
+    </div>
+
+    <h3>STEP 2: Maintenance Dose (MD) &amp; Frequency</h3>
+    <div id="mdOutput" class="card"></div>
+    <div id="mdFootnote" style="display:none;"></div>
+
+    <h3>STEP 3: Administration (Dilution &amp; Infusion Rate)</h3>
+    <div id="adminOutput" class="card">
+      <h4>3.1 Loading Dose Dilution &amp; Administration:</h4>
+      <div id="ldAdminOutput" class="output-box"></div>
+      <h4>3.2 Maintenance Dose Dilution &amp; Administration:</h4>
+      <div id="mdAdminOutput" class="output-box"></div>
+      <div class="note-card">
+        💡 <strong>Maximum Infusion Rate:</strong>
+        <ul>
+          <li>Do not exceed 10 mg/min.</li>
+          <li>Infusing too rapidly may cause infusion-related reactions (Red Man Syndrome).</li>
+        </ul>
+      </div>
+      <a class="collapsible-header" onclick="toggleCollapsible('warningCollapse')">Step 3.3 – Special Warnings &amp; Adjustments</a>
+      <div id="warningCollapse" class="collapsible-content">
+        <div class="card" style="background-color: var(--color-white); margin-bottom: 8px;">
+          <div class="warning-title">
+            <span class="icon">!</span> Vancomycin Infusion Reaction (VIR / "Red Man Syndrome")
+          </div>
+          <ul>
+            <li>VIR is a common infusion-related reaction, not an allergy.</li>
+            <li>Symptoms: Itching, flushing, and erythematous rash involving the face, neck, or upper trunk.</li>
+            <li>Management:
+              <ul style="margin-left: 20px;">
+                <li>Stop or slow the infusion rate — symptoms usually resolve.</li>
+                <li>Antihistamines (e.g., chlorpheniramine or diphenhydramine) may help if symptoms persist.</li>
+                <li>For subsequent doses, infuse at &le; 10 mg/min to minimize recurrence.</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <div class="card" style="background-color: var(--color-white); margin-bottom: 8px;">
+          <div class="warning-title">
+            <span class="icon">!</span> Fluid Volume Considerations - High Dilution Volume Advisory
+          </div>
+          <p style="margin-top: 4px;">For patients with fluid restrictions or heart failure, consider alternative dilution strategy or slower infusion rate.</p>
+        </div>
+        <div class="card" style="background-color: var(--color-white); margin-bottom: 0;">
+          <div class="warning-title">
+            <span class="icon">!</span> Phlebitis / Peripheral Line Irritation Risk
+          </div>
+          <p style="margin-top: 4px;">Peripheral administration of vancomycin may cause local irritation or phlebitis, particularly at higher concentrations. Use the largest available vein and monitor the site for redness, pain, or swelling.</p>
+        </div>
+      </div>
+    </div><!-- /adminOutput -->
+
+    <h3>STEP 4: Therapeutic Drug Monitoring (TDM) Guidance</h3>
+    <div id="v_tdmOutput" class="card">
+      <h4>4.1. When to Take the First TDM Sample</h4>
+      <div id="tdmTimingOutput" class="output-box"></div>
+      <h4 id="tdmSamplingHeading">4.2. Do you need a post-dose (Peak) level?</h4>
+      <div id="tdmSamplingOutput" class="output-box"></div>
+      <div class="note-card">
+        💡 <strong>General Advisory:</strong>
+        <ul>
+          <li>If the sampling time falls after office hours (AOH), it is recommended to collect the sample the following morning.</li>
+          <li><strong>Documentation Reminder:</strong> TDM results are meaningless unless:
+            <ol style="margin-left: 16px; margin-top: 3px;">
+              <li>The prescribed dose was correctly administered, and</li>
+              <li>The exact timing of infusion and sampling is accurately recorded.</li>
+            </ol>
+          </li>
+        </ul>
+        <p style="margin-top: 6px;">Record all relevant details in the 📄 <a href="https://amshsgb.wixsite.com/my-site/_files/ugd/b064f1_41ed8df4c61f4c24a6bb2ebcff1cea7c.pdf" target="_blank">Vancomycin AUC Monitoring Form</a></p>
+      </div>
+    </div><!-- /v_tdmOutput -->
+
+    <h3>STEP 5: Patient / Laboratory Monitoring</h3>
+    <div class="card">
+      <ul>
+        <li>Monitor renal profile (RP) and urine output regularly.</li>
+        <li>Ensure the patient remains well hydrated while on Vancomycin.</li>
+        <li>Avoid concomitant nephrotoxic agents where possible.</li>
+        <li>Monitor WBC, CRP &amp; Vital Signs for signs of improvement/deterioration.</li>
+      </ul>
+    </div>
+
+    <h2 class="note-section-heading">Clinical Note Section (Auto-Generated)</h2>
+    <div class="input-note-style">
+      Disclaimer! This note is intended as a template only — please review and adjust it based on your clinical assessment and professional judgement.
+    </div>
+
+    <div id="v_clinicalNoteContainer" class="card clinical-note-card">
+      <div id="v_clinicalNoteContent">
+
+        <div style="margin-bottom: 10px;">
+          <p style="margin: 0; font-size: 14px; font-family: Arial, sans-serif; font-weight: 700;">VANCOMYCIN THERAPY RECOMMENDATION</p>
+          <p style="margin: 0 0 8px 0; font-size: 13px; font-family: Arial, sans-serif; font-weight: 700;">========================================</p>
+          <p style="margin: 0; font-weight: 400; line-height: 1.6; font-size: 13px; font-family: Arial, sans-serif;">
+            Received query from Dr <input type="text" id="dr_input" value="" placeholder="Name" style="border: none; border-bottom: 2px solid #FF6F00; background: transparent; width: 150px; padding: 2px 4px; font-family: Arial, sans-serif; font-size: 13px; font-weight: 600;"> regarding IV Vancomycin initiation for this patient.
+          </p>
+          <p style="margin: 8px 0 0 0; font-size: 13px; font-family: Arial, sans-serif; font-weight: 700;">----------------------------------------</p>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <p style="margin: 0 0 6px 0; font-weight: 700; font-size: 14px; font-family: Arial, sans-serif;">PATIENT SUMMARY</p>
+          <div id="noteSummaryList" style="margin: 0 0 8px 0; padding-left: 0; font-size: 13px; font-family: Arial, sans-serif;"></div>
+          <p style="margin: 0; font-size: 13px; font-family: Arial, sans-serif; font-weight: 700;">----------------------------------------</p>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <p style="margin: 0 0 6px 0; font-weight: 700; font-size: 14px; font-family: Arial, sans-serif;">RECOMMENDED REGIMEN</p>
+          <div style="margin-bottom: 8px;">
+            <p style="margin: 0 0 4px 0; font-weight: 700; font-size: 13px; font-family: Arial, sans-serif;">LOADING DOSE:</p>
+            <p id="noteLDRegimen" style="margin: 0 0 6px 0; line-height: 1.6; font-size: 13px; font-family: Arial, sans-serif;"></p>
+          </div>
+          <div style="margin-bottom: 8px;">
+            <p style="margin: 0 0 4px 0; font-weight: 700; font-size: 13px; font-family: Arial, sans-serif;">MAINTENANCE DOSE:</p>
+            <p id="noteMDRegimen" style="margin: 0; line-height: 1.6; font-size: 13px; font-family: Arial, sans-serif;"></p>
+          </div>
+          <p style="margin: 0; font-size: 13px; font-family: Arial, sans-serif; font-weight: 700;">----------------------------------------</p>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <p style="margin: 0 0 6px 0; font-weight: 700; font-size: 14px; font-family: Arial, sans-serif;">TDM SAMPLING</p>
+          <div style="margin-bottom: 8px;">
+            <p id="noteTDM1" style="margin: 0 0 4px 0; line-height: 1.6; font-size: 13px; font-family: Arial, sans-serif;">- TDM instructions not generated.</p>
+            <p id="noteTDM2" style="margin: 0; line-height: 1.6; font-size: 13px; font-family: Arial, sans-serif;"></p>
+          </div>
+          <div style="font-size: 13px; line-height: 1.55; margin-top: 8px; font-family: Arial, sans-serif;">
+            <p style="margin: 0 0 5px 0; font-weight: 700;">IMPORTANT:</p>
+            <p style="margin: 0 0 4px 0;">- TDM blood sample should be obtained via venipuncture whenever possible, from the arm opposite to drug administration.</p>
+            <p style="margin: 0;">- Do not collect TDM samples from central lines (e.g. PICC, CVC, or other central venous catheters).</p>
+          </div>
+          <p style="margin: 10px 0 0 0; font-size: 13px; font-family: Arial, sans-serif; font-weight: 700;">----------------------------------------</p>
+        </div>
+
+        <div style="margin-bottom: 6px;">
+          <p style="margin: 0 0 6px 0; font-weight: 700; font-size: 14px; font-family: Arial, sans-serif;">REMARKS</p>
+          <p style="margin: 0 0 4px 0; font-size: 13px; font-family: Arial, sans-serif;">- Monitor renal profile (RP) and urine output regularly.</p>
+          <p style="margin: 0 0 4px 0; font-size: 13px; font-family: Arial, sans-serif;">- Ensure the patient remains well hydrated while on Vancomycin.</p>
+          <p style="margin: 0 0 4px 0; font-size: 13px; font-family: Arial, sans-serif;">- Avoid concomitant nephrotoxic agents where possible.</p>
+          <p style="margin: 0 0 4px 0; font-size: 13px; font-family: Arial, sans-serif;">- Infusion rate must not exceed 10 mg/min to minimize infusion-related reactions.</p>
+          <p style="margin: 10px 0 0 0; font-size: 13px; font-family: Arial, sans-serif; font-weight: 700;">========================================</p>
+        </div>
+
+      </div><!-- /#v_clinicalNoteContent -->
+
+      <div class="copy-button-container">
+        <button class="copy-button" onclick="vancocopyClinicalNote()">
+          Copy to Notes
+          <span class="tooltip-text">Copy this note to your clinical documentation.</span>
+        </button>
+      </div>
+    </div><!-- /#v_clinicalNoteContainer -->
+
+    <div class="card note-card">
+      <h3>Vancomycin Calculator Disclaimer</h3>
+      <ul>
+        <li>Recommendation is based on Hospital Sungai Buloh Vancomycin Protocol. 🔗 <a href="https://amshsgb.wixsite.com/my-site/_files/ugd/b064f1_9106727a6d0748b2a4a9d448af16208a.pdf" target="_blank">Refer to Hosp Sungai Buloh Vancomycin Protocol</a>.</li>
+        <li>Clinical correlation is required.</li>
+        <li>If in any doubt, call TDM Pharmacy (Ext: 4124) or refer to Infectious Disease (ID).</li>
+        <li>Referral to ID or AMS Team is strongly recommended for all MRSA or Vancomycin cases.</li>
+      </ul>
+    </div>
+
+  </div><!-- /#vancomycinOutput -->
+
+</div><!-- /container -->
+</div><!-- /outer-wrap -->
+</div><!-- /tab-vanco -->
+
+
+<!-- ══════════════════════════════════════════════
+     TAB 2 — TDM SAMPLING GUIDE
+══════════════════════════════════════════════ -->
+<div id="tab-tdm" class="tab-content">
+<div class="outer-wrap">
+<div class="container">
+
+  <div class="page-title-block" style="padding: 6px 20px 10px;">
+    <div class="title-clear-row">
+      <h1 style="font-size: 1.45rem; margin-bottom: 2px;">Vancomycin TDM Sampling Guide</h1>
+      <button class="nav-button clear" onclick="clearTDMInputs()">CLEAR</button>
+    </div>
+    <p style="font-size: 0.9rem; margin-top: 2px;">Calculate optimal sampling times for therapeutic drug monitoring.</p>
+  </div>
+
+  <div class="tdm-disclaimer" style="padding: 8px 13px; display: flex; align-items: center; gap: 10px; margin: 6px 0 10px;">
+    <span style="font-size: 1.1rem; flex-shrink: 0;">⚠️</span>
+    <p style="margin: 0; font-size: 0.85rem; line-height: 1.4;">
+      <strong>Disclaimer:</strong> This guide is <strong>NOT APPLICABLE</strong> to patients on renal replacement therapy (RRT) or haemodialysis.
+    </p>
+  </div>
+
+  <div class="card" style="padding: 14px 18px 18px;">
+    <h3 style="margin-top: 2px; margin-bottom: 12px;">TDM Sampling Parameters</h3>
+    <form id="tdmForm">
+
+      <div class="form-group">
+        <label>Vancomycin Regimen:</label>
+
+        <!-- Loading Dose (Optional) -->
+        <div class="regimen-subsection" style="background: #FAFAFA; border: 1px solid #EBEBEB; border-radius: 8px; padding: 12px 13px; margin-top: 6px;">
+          <div class="regimen-chip optional">Loading Dose &nbsp;·&nbsp; Optional</div>
+          <div class="ld-mg-row">
+            <input type="number" id="ld_dose" min="0" step="50" placeholder="e.g. 1500" inputmode="numeric">
+            <span class="mg-label">mg</span>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: stretch; flex-wrap: nowrap;">
+            <input type="date" id="ld_date" style="flex: 1 1 0; min-width: 0; height: 40px; padding: 0 8px; box-sizing: border-box;">
+            <select id="ld_hour" style="flex: 0 0 52px; height: 40px; padding: 0 2px; box-sizing: border-box;">
+              <option value="">HH</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+              <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+              <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+              <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+            </select>
+            <select id="ld_minute" style="flex: 0 0 52px; height: 40px; padding: 0 2px; box-sizing: border-box;">
+              <option value="">MM</option>
+              <option value="00">00</option><option value="15">15</option>
+              <option value="30">30</option><option value="45">45</option>
+            </select>
+            <select id="ld_ampm" style="flex: 0 0 56px; height: 40px; padding: 0 2px; box-sizing: border-box;">
+              <option value="">--</option>
+              <option value="AM">AM</option><option value="PM">PM</option>
+            </select>
+          </div>
+        </div>
+
+        <hr class="regimen-divider">
+
+        <!-- Maintenance Dose (Required) -->
+        <div class="regimen-subsection">
+          <div class="regimen-chip required">Maintenance Dose &nbsp;·&nbsp; Required</div>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <div style="flex: 1 1 0; min-width: 0;">
+              <select id="dose" style="width: 100%;">
+                <option value="">Dose</option>
+                <option value="500">500 mg</option>
+                <option value="750">750 mg</option>
+                <option value="1000">1000 mg</option>
+                <option value="1250">1250 mg</option>
+                <option value="1500">1500 mg</option>
+              </select>
+            </div>
+            <div style="flex: 1 1 0; min-width: 0;">
+              <select id="frequency" style="width: 100%;" onchange="showAdminTimesSection(this.value)">
+                <option value="">Frequency</option>
+                <option value="OD">OD (Once Daily)</option>
+                <option value="BD">BD (Twice Daily)</option>
+                <option value="TDS">TDS (Three Times Daily)</option>
+                <option value="QID">QID (Four Times Daily)</option>
+              </select>
+            </div>
+          </div>
+          <div id="frequencyNote" style="display:none; margin-bottom: 8px;" class="input-footnote"></div>
+
+          <!-- Ward Admin Times — shown when frequency is selected -->
+          <div id="adminTimesSection" style="display:none; margin-bottom:10px; padding:10px 12px; background:#FBF7F7; border:1px solid #E8D8D8; border-radius:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px;">
+              <span style="font-size:0.8rem; font-weight:700; color:#800000;">🕐 Ward Administration Times</span>
+              <button type="button" onclick="resetAdminTimes()"
+                style="font-size:0.72rem; color:#800000; background:none; border:1px solid #C8A0A0;
+                       border-radius:4px; cursor:pointer; padding:2px 8px; white-space:nowrap;
+                       font-family:inherit;">↺ Reset to HSgB default</button>
+            </div>
+            <p style="margin:0 0 8px 0; font-size:0.74rem; color:#888; line-height:1.4;">Edit if your ward uses different administration times. Changes will update the calculated sampling times.</p>
+            <div id="adminTimesInputs"></div>
+          </div>
+          <label style="display:block; font-size:0.78rem; font-weight:600; color:#555; margin-bottom:4px;">📅 Date &amp; time of <u>FIRST</u> maintenance dose:</label>
+          <div style="display: flex; gap: 6px; align-items: stretch; flex-wrap: nowrap;">
+            <input type="date" id="md_date" style="flex: 1 1 0; min-width: 0; height: 40px; padding: 0 8px; box-sizing: border-box;">
+            <select id="md_hour" style="flex: 0 0 52px; height: 40px; padding: 0 2px; box-sizing: border-box;">
+              <option value="">HH</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+              <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+              <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+              <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+            </select>
+            <select id="md_minute" style="flex: 0 0 52px; height: 40px; padding: 0 2px; box-sizing: border-box;">
+              <option value="">MM</option>
+              <option value="00">00</option><option value="15">15</option>
+              <option value="30">30</option><option value="45">45</option>
+            </select>
+            <select id="md_ampm" style="flex: 0 0 56px; height: 40px; padding: 0 2px; box-sizing: border-box;">
+              <option value="">--</option>
+              <option value="AM">AM</option><option value="PM">PM</option>
+            </select>
+          </div>
+          <div id="timeRoundingNote" style="display:none; margin-top: 6px;" class="input-footnote"></div>
+          <div id="doseGapPrompt" style="display:none; margin-top: 8px;"></div>
+        </div>
+      </div><!-- /form-group: regimen -->
+
+      <!-- Sampling Method -->
+      <div class="form-group">
+        <label>Sampling Method: <span style="font-weight: 400; font-size: 0.8rem; color: #E65100;">&#9654; Select one to proceed</span></label>
+        <input type="hidden" id="samplingMethod" value="">
+        <div class="method-badge-row">
+
+          <!-- TROUGH badge -->
+          <div class="method-badge" id="badge-trough" onclick="selectSamplingMethod('trough')">
+            <button type="button" class="method-info-btn" onclick="toggleMethodInfo(event, 'trough')" title="See recommended indications">i</button>
+            <div class="method-badge-title">TROUGH <span class="method-badge-check">✓</span></div>
+            <div class="method-badge-sub">Pre-dose sampling only</div>
+            <div class="method-info-panel info-trough" id="info-panel-trough">
+              <strong style="color: #2E7D32;">Trough — Pre-dose sampling only.</strong>
+              Recommended for:
+              <ul>
+                <li>CNS infections</li>
+                <li>Skin &amp; soft tissue infections (SSTI)</li>
+                <li>Urinary Tract Infection (UTI)</li>
+                <li>MRCoNS infection</li>
+                <li>Enterococcus infection</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- AUC badge -->
+          <div class="method-badge" id="badge-auc" onclick="selectSamplingMethod('auc')">
+            <button type="button" class="method-info-btn" onclick="toggleMethodInfo(event, 'auc')" title="See recommended indications">i</button>
+            <div class="method-badge-title">AUC <span class="method-badge-check">✓</span></div>
+            <div class="method-badge-sub">Pre-dose + Post-dose sampling</div>
+            <div class="method-info-panel info-auc" id="info-panel-auc">
+              <strong style="color: #3949AB;">AUC — Pre-dose + Post-dose sampling.</strong>
+              Recommended for <em>MRSA</em> infection of:
+              <ul>
+                <li>Bacteremia</li>
+                <li>Endocarditis</li>
+                <li>Pneumonia</li>
+                <li>Bone / Joint Infection</li>
+                <li>Neutropenic fever</li>
+              </ul>
+            </div>
+          </div>
+
+        </div><!-- /.method-badge-row -->
+      </div>
+
+    </form>
+  </div><!-- /card -->
+
+  <!-- Results Section -->
+  <div id="tdm_tdmOutput" style="display:none;">
+
+    <h3 style="margin: 16px 0 6px 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-primary-dark);">Summary of Inputs</h3>
+    <div id="tdm_summaryOutput" class="card" style="padding: 10px 14px;"></div>
+
+    <h3 style="margin: 14px 0 6px 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-primary-dark);">TDM Sampling Recommendations</h3>
+
+    <div id="samplingCard" class="card" style="background-color: #E8F5E9; border-left: 4px solid #4CAF50; padding: 14px 16px;">
+      <div id="troughSection" style="background: #fff; border-radius: 8px; padding: 12px 14px;">
+        <p style="margin: 0 0 5px 0; font-size: 0.78rem; font-weight: 700; color: #2E7D32; text-transform: uppercase; letter-spacing: 0.6px;">Pre-dose (Trough)</p>
+        <div id="troughOutput"></div>
+      </div>
+      <div id="aucPostSection" style="display:none; margin-top: 10px;">
+        <div style="background: #fff; border-radius: 8px; padding: 12px 14px;">
+          <p style="margin: 0 0 5px 0; font-size: 0.78rem; font-weight: 700; color: #1565C0; text-transform: uppercase; letter-spacing: 0.6px;">Post-dose (Peak)</p>
+          <div id="postdoseOutput"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="afterHoursWarning" style="display:none;"></div>
+    <div id="weekendWarning" style="display:none;"></div>
+
+    <h2 style="margin-top: 20px; margin-bottom: 6px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-primary-dark);">Clinical Note Template</h2>
+    <div class="input-note-style" style="margin-bottom: 10px;">
+      Disclaimer! This note is intended as a template only — please review and adjust it based on your clinical assessment and professional judgement.
+    </div>
+
+    <div id="tdm_clinicalNoteContainer" class="card clinical-note-card" style="padding: 0; overflow: hidden; border: 1.5px solid #B0BEC5; box-shadow: 0 2px 10px rgba(0,0,0,0.08);">
+      <div style="background: linear-gradient(135deg, #37474F 0%, #546E7A 100%); padding: 10px 16px; display: flex; align-items: center; gap: 9px;">
+        <span style="font-size: 1rem;">📄</span>
+        <span style="font-size: 0.8rem; font-weight: 700; color: #fff; letter-spacing: 0.8px; text-transform: uppercase;">Clinical Note Preview</span>
+        <span style="margin-left: auto; font-size: 0.72rem; color: #B0BEC5; font-style: italic;">EHIS-ready plain text</span>
+      </div>
+      <div style="background: #FAFBFC; padding: 18px 20px;">
+        <div id="tdm_clinicalNoteContent" style="font-family: Arial, sans-serif; font-size: 13px; line-height: 1.8; color: #000; background: #fff; border: 1px solid #E0E0E0; border-radius: 6px; padding: 16px 18px;">
+          <p style="font-weight: 700; margin: 0 0 2px 0;">VANCOMYCIN TDM SAMPLING PLAN</p>
+          <p style="margin: 0 0 14px 0;">========================================</p>
+          <p style="font-weight: 700; margin: 0 0 6px 0;">PATIENT SUMMARY</p>
+          <div id="notePatientSummary" style="margin: 0 0 6px 0;"></div>
+          <p style="margin: 0 0 14px 0;">----------------------------------------</p>
+          <p style="font-weight: 700; margin: 0 0 6px 0;">TDM SAMPLING INSTRUCTIONS</p>
+          <div id="noteTDMInstructions" style="margin: 0 0 6px 0;"></div>
+          <p style="margin: 0 0 14px 0;">----------------------------------------</p>
+          <p style="font-weight: 700; margin: 0 0 6px 0;">REMINDERS</p>
+          <p style="margin: 0 0 4px 0;">- TDM blood sample should be obtained via venipuncture whenever possible, from the arm opposite to drug administration.</p>
+          <p style="margin: 0 0 4px 0;">- Do not collect TDM samples from central lines (e.g. PICC, CVC, or other central venous catheters).</p>
+          <p style="margin: 0 0 4px 0;">- Document the exact timing of dose administration and sample collection in the patient's medical record.</p>
+          <p style="margin: 14px 0 0 0;">========================================</p>
+        </div><!-- /#tdm_clinicalNoteContent -->
+        <div class="copy-button-container" style="margin-top: 14px;">
+          <button class="copy-button" onclick="tdmcopyClinicalNote()">
+            📋 Copy to Notes
+            <span class="tooltip-text">Copy this sampling plan to your clinical documentation.</span>
+          </button>
+        </div>
+      </div><!-- /.note-body -->
+    </div><!-- /#tdm_clinicalNoteContainer -->
+
+  </div><!-- /#tdm_tdmOutput -->
+
+</div><!-- /container -->
+</div><!-- /outer-wrap -->
+</div><!-- /tab-tdm -->
+
+
+<!-- ══════════════════════════════════════
+     FOOTER / DISCLAIMER
+══════════════════════════════════════ -->
+<div class="disclaimer-section">
+    <div class="disclaimer-credits">
+        <div class="disclaimer-credits-row">
+            <span class="disclaimer-credits-label">Developed by</span>
+            <span class="disclaimer-credits-value">Izyana Munirah Idham (AMS Pharmacist), Hospital Sungai Buloh.</span>
+        </div>
+        <div class="disclaimer-credits-row">
+            <span class="disclaimer-credits-label">Collaborators</span>
+            <span class="disclaimer-credits-value">Nur Farhana (TDM Pharmacy), Hannah Md Mahir, Fong Siew Li &amp; Muhammad Zulhafiz (AMS Pharmacists), PRIC, Medication Safety Team, JK IT &amp; Digital (Pharmacy Dept, HSgB).</span>
+        </div>
+        <div class="disclaimer-credits-row">
+            <span class="disclaimer-credits-label">Approved by</span>
+            <span class="disclaimer-credits-value">Dr Syamhanin Adnan (Head of Pharmacy Dept, HSgB).</span>
+        </div>
+        <div class="disclaimer-credits-row">
+            <span class="disclaimer-credits-label">Launched</span>
+            <span class="disclaimer-credits-value">Apr 2026.</span>
+        </div>
+    </div>
+    <div class="disclaimer-divider"></div>
+    <p class="stronger-bold">For Hospital Sungai Buloh Staff Use Only.</p>
+    <p class="footnote" style="text-align:justify;">This calculator provides general guidance based on the HSgB Vancomycin Protocol to support standardised practice in Hosp Sungai Buloh. It may not cover all clinical scenarios. Healthcare practitioners should review individual patient details and use professional judgment when applying this guide.</p>
+    <p style="margin-top: 8px;">📝 <span class="less-bold">Feedback:</span> We welcome your feedback to improve this tool.
+        <a href="https://forms.gle/nDNDfC2ktjmumdSYA" target="_blank" rel="noopener noreferrer">Click here to submit feedback</a>
+    </p>
+</div>
+
+
+</div><!-- /#main-content -->
+
+
+<!-- ══════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════ -->
+<script src="assets/js/common.js"></script>
+<script src="assets/js/vancomycin.js"></script>
+<script src="assets/js/tdm-sampling.js"></script>
+<script>
+
+  /* ── Gate logic ── */
+  var CORRECT_PIN = '4114';
+
+  (function () {
+    if (sessionStorage.getItem('vdose_agreed') === '1') {
+      document.getElementById('disclaimer-page').style.display = 'none';
+      document.getElementById('main-content').style.display = 'block';
+    }
+  })();
+
+  function updateProceed() {
+    var agreed = document.getElementById('agree-checkbox').checked;
+    var pin = getPinValue();
+    var btn = document.getElementById('proceed-btn');
+    var ready = agreed && pin.length === 4;
+    btn.disabled = !ready;
+    btn.classList.toggle('active', ready);
+  }
+
+  function getPinValue() {
+    return ['pin0','pin1','pin2','pin3']
+      .map(function(id){ return document.getElementById(id).value; })
+      .join('');
+  }
+
+  function pinInput(idx) {
+    var el = document.getElementById('pin' + idx);
+    el.value = el.value.replace(/[^0-9]/g, '').slice(-1);
+    if (el.value && idx < 3) {
+      document.getElementById('pin' + (idx + 1)).focus();
+    }
+    [0,1,2,3].forEach(function(i){
+      document.getElementById('pin'+i).classList.remove('pin-error');
+    });
+    document.getElementById('pinErrorMsg').classList.remove('visible');
+    updateProceed();
+  }
+
+  function pinKeydown(e, idx) {
+    if (e.key === 'Backspace') {
+      var el = document.getElementById('pin' + idx);
+      if (!el.value && idx > 0) {
+        document.getElementById('pin' + (idx - 1)).focus();
+      }
+    }
+    if (e.key === 'Enter') { proceedToApp(); }
+  }
+
+  function proceedToApp() {
+    if (getPinValue() !== CORRECT_PIN) {
+      [0,1,2,3].forEach(function(i){
+        var el = document.getElementById('pin'+i);
+        el.classList.add('pin-error');
+        el.value = '';
+      });
+      document.getElementById('pinErrorMsg').classList.add('visible');
+      document.getElementById('pin0').focus();
+      updateProceed();
+      return;
+    }
+    sessionStorage.setItem('vdose_agreed', '1');
+    var disc = document.getElementById('disclaimer-page');
+    var main = document.getElementById('main-content');
+    disc.style.transition = 'opacity 0.3s ease';
+    disc.style.opacity = '0';
+    setTimeout(function () {
+      disc.style.display = 'none';
+      main.style.display = 'block';
+      main.style.opacity = '0';
+      main.style.transition = 'opacity 0.3s ease';
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { main.style.opacity = '1'; });
+      });
+      window.scrollTo(0, 0);
+    }, 300);
+  }
+
+  /* ── Collapsible sections ── */
+  function toggleCollapsible(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = el.style.display === 'block' ? 'none' : 'block';
+  }
+
+  /* ── Tab switching ── */
+  function switchTab(tab) {
+    ['vanco', 'tdm'].forEach(function(t) {
+      document.getElementById('btn-' + t).classList.toggle('active', t === tab);
+      document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    });
+  }
+
+  /* ── Override BW/CrCl links from shared.js ── */
+  function openCrClCalculator() { window.open('../calculators/renal-function.html', '_blank'); }
+  function openBwCalculator()   { window.open('../calculators/body-weight.html',    '_blank'); }
+
+  /* ── Sampling method badge interactions ── */
+  function selectSamplingMethod(method) {
+    document.getElementById('samplingMethod').value = method;
+    document.getElementById('badge-trough').className = 'method-badge' + (method === 'trough' ? ' selected-trough' : '');
+    document.getElementById('badge-auc').className    = 'method-badge' + (method === 'auc'    ? ' selected-auc'    : '');
+    calculateTDM();
+  }
+
+  function toggleMethodInfo(event, method) {
+    event.stopPropagation();
+    var panel = document.getElementById('info-panel-' + method);
+    var other = document.getElementById('info-panel-' + (method === 'trough' ? 'auc' : 'trough'));
+    var isPinned = panel.classList.contains('pinned');
+    other.classList.remove('visible', 'pinned');
+    if (isPinned) {
+      panel.classList.remove('visible', 'pinned');
+    } else {
+      panel.classList.add('visible', 'pinned');
+    }
+  }
+
+  /* ── DOMContentLoaded setup ── */
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('form').forEach(function(form) {
+      form.addEventListener('submit', function(e) { e.preventDefault(); });
+    });
+    document.querySelectorAll('#tab-vanco input, #tab-vanco select').forEach(function(el) {
+      el.addEventListener('input',  calculateVancomycin);
+      el.addEventListener('change', calculateVancomycin);
+      if (el.id === 'dialysisStatus') el.addEventListener('change', toggleCrClInput);
+      if (el.id === 'ivAccess')       el.addEventListener('change', displayIvAccessFootnote);
+    });
+    document.querySelectorAll('#tab-tdm input:not([type="hidden"]), #tab-tdm select').forEach(function(el) {
+      el.addEventListener('input',  calculateTDM);
+      el.addEventListener('change', calculateTDM);
+    });
+    ['trough', 'auc'].forEach(function(method) {
+      var badge = document.getElementById('badge-' + method);
+      var panel = document.getElementById('info-panel-' + method);
+      if (badge && panel) {
+        badge.addEventListener('mouseenter', function() { if (!panel.classList.contains('pinned')) panel.classList.add('visible'); });
+        badge.addEventListener('mouseleave', function() { if (!panel.classList.contains('pinned')) panel.classList.remove('visible'); });
+      }
+    });
+  });
+
+</script>
+
+</body>
+</html>
